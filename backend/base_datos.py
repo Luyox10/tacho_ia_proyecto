@@ -106,8 +106,3 @@ def ejecutar_consulta(sql: str, params: tuple = None, fetchone: bool = False,
     finally:
         if conexion:
             conexion.close()
-
-
-
-from base_datos import ejecutar_consulta
-

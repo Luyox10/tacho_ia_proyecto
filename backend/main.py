@@ -7,8 +7,8 @@ Endpoints:
   • POST /api/login                         – Login unificado (DNI o email)
   • GET  /api/tacho/identificar/{dni}       – Identificación rápida para simulador físico
   • POST /api/simulador/clasificar          – Clasificación de imagen con modelo Keras
-  • GET  /api/dashboard/alumno/{alumno_id}  – Panel del alumno (puntos + logros)
-  • GET  /api/dashboard/docente/{docente_id}– Panel del docente (alumnos + ranking)
+  • GET  /api/dashboard/alumno/{usuario_id}  – Panel del alumno (puntos + logros)
+  • GET  /api/dashboard/docente/{usuario_id} – Panel del docente (alumnos + ranking)
   • GET  /api/dashboard/director            – Panel del director (métricas globales)
 """
 
@@ -134,16 +134,16 @@ def preprocesar_imagen(imagen_bytes: bytes) -> np.ndarray:
 # ── 1. LOGIN UNIFICADO ───────────────────────
 
 @app.post("/api/login")
-async def login(dni: Optional[str] = Form(None), email: Optional[str] = Form(None),
+async def login(dni: Optional[str] = Form(None), correo: Optional[str] = Form(None),
                 contrasena: str = Form(...)):
     """
     Login unificado para la plataforma web.
 
     - Si se envía **dni**: busca en `usuarios` con rol alumno o docente.
-    - Si se envía **email**: busca en `usuarios` con rol administrador (director).
+    - Si se envía **correo**: busca en `usuarios` con rol director.
 
     Form fields:
-        dni (opcional), email (opcional), contrasena (obligatorio).
+        dni (opcional), correo (opcional), contrasena (obligatorio).
 
     Returns:
         dict con id, nombre, rol y aula_id del usuario autenticado.
@@ -153,25 +153,25 @@ async def login(dni: Optional[str] = Form(None), email: Optional[str] = Form(Non
         HTTPException 401: credenciales inválidas.
         HTTPException 500: error interno de base de datos.
     """
-    if not dni and not email:
+    if not dni and not correo:
         raise HTTPException(
             status_code=400,
-            detail="Debes enviar 'dni' o 'email' para iniciar sesión.",
+            detail="Debes enviar 'dni' o 'correo' para iniciar sesión.",
         )
 
     try:
         if dni:
             usuario = ejecutar_consulta(
-                "SELECT id, nombre, rol, aula_id, contrasena "
+                "SELECT id, nombre, apellido, rol, aula_id, contrasena_hash "
                 "FROM usuarios WHERE dni = %s AND rol IN ('alumno', 'docente')",
                 (dni,),
                 fetchone=True,
             )
         else:
             usuario = ejecutar_consulta(
-                "SELECT id, nombre, rol, aula_id, contrasena "
-                "FROM usuarios WHERE email = %s AND rol = 'administrador'",
-                (email,),
+                "SELECT id, nombre, apellido, rol, aula_id, contrasena_hash "
+                "FROM usuarios WHERE correo = %s AND rol = 'director'",
+                (correo,),
                 fetchone=True,
             )
     except RuntimeError as e:
@@ -180,12 +180,13 @@ async def login(dni: Optional[str] = Form(None), email: Optional[str] = Form(Non
     if not usuario:
         raise HTTPException(status_code=401, detail="Usuario no encontrado.")
 
-    if usuario["contrasena"] != contrasena:
+    if usuario["contrasena_hash"] != contrasena:
         raise HTTPException(status_code=401, detail="Contraseña incorrecta.")
 
     return {
-        "id": usuario["id"],
+        "usuario_id": usuario["id"],
         "nombre": usuario["nombre"],
+        "apellido": usuario["apellido"],
         "rol": usuario["rol"],
         "aula_id": usuario["aula_id"],
     }
@@ -223,7 +224,7 @@ async def identificar_alumno(dni: str):
         raise HTTPException(status_code=404, detail="Alumno no encontrado con ese DNI.")
 
     return {
-        "alumno_id": alumno["id"],
+        "usuario_id": alumno["id"],
         "nombre": alumno["nombre"],
         "aula_id": alumno["aula_id"],
     }
@@ -233,7 +234,7 @@ async def identificar_alumno(dni: str):
 
 @app.post("/api/simulador/clasificar")
 async def clasificar_residuo(
-    alumno_id: int = Form(...),
+    usuario_id: int = Form(...),
     imagen_base64: Optional[str] = Form(None),
     imagen_archivo: Optional[UploadFile] = File(None),
 ):
@@ -242,7 +243,7 @@ async def clasificar_residuo(
     y registra el resultado en la base de datos.
 
     Form fields:
-        alumno_id:      ID del alumno que deposita el residuo.
+        usuario_id:     ID del alumno que deposita el residuo.
         imagen_base64:  (opcional) imagen codificada en base64.
         imagen_archivo: (opcional) archivo de imagen subido.
 
@@ -278,7 +279,7 @@ async def clasificar_residuo(
     try:
         alumno = ejecutar_consulta(
             "SELECT id, aula_id FROM usuarios WHERE id = %s AND rol = 'alumno'",
-            (alumno_id,),
+            (usuario_id,),
             fetchone=True,
         )
     except RuntimeError as e:
@@ -292,16 +293,16 @@ async def clasificar_residuo(
     tensor = preprocesar_imagen(imagen_bytes)
     prediccion = modelo.predict(tensor, verbose=0)
     indice = int(np.argmax(prediccion[0]))
-    categoria = CATEGORIAS[indice]
+    tipo_residuo = CATEGORIAS[indice]
     confianza = float(prediccion[0][indice])
 
     # ── Registrar en BD ──
     puntos = 10
     try:
         ejecutar_consulta(
-            "INSERT INTO registro_residuos (alumno_id, aula_id, categoria, confianza, puntos, fecha) "
-            "VALUES (%s, %s, %s, %s, %s, %s)",
-            (alumno_id, alumno["aula_id"], categoria, round(confianza, 4), puntos, datetime.utcnow()),
+            "INSERT INTO registro_residuos (usuario_id, tipo_residuo, puntos_ganados, fecha_registro) "
+            "VALUES (%s, %s, %s, %s)",
+            (usuario_id, tipo_residuo, puntos, datetime.utcnow()),
             commit=True,
         )
         ejecutar_consulta(
@@ -313,7 +314,7 @@ async def clasificar_residuo(
         raise HTTPException(status_code=500, detail=str(e))
 
     return {
-        "categoria_detectada": categoria,
+        "tipo_residuo_detectado": tipo_residuo,
         "confianza": round(confianza, 4),
         "puntos_sumados": puntos,
     }
@@ -321,14 +322,14 @@ async def clasificar_residuo(
 
 # ── 4. DASHBOARD ALUMNO ──────────────────────
 
-@app.get("/api/dashboard/alumno/{alumno_id}")
-async def dashboard_alumno(alumno_id: int):
+@app.get("/api/dashboard/alumno/{usuario_id}")
+async def dashboard_alumno(usuario_id: int):
     """
     Datos para el panel del alumno: puntos acumulados, cantidad de registros
     y logros obtenidos.
 
     Path params:
-        alumno_id: ID del alumno.
+        usuario_id: ID del usuario con rol alumno.
 
     Returns:
         dict con nombre, puntos_totales, total_registros y lista de logros.
@@ -339,8 +340,8 @@ async def dashboard_alumno(alumno_id: int):
     """
     try:
         alumno = ejecutar_consulta(
-            "SELECT id, nombre, aula_id FROM usuarios WHERE id = %s AND rol = 'alumno'",
-            (alumno_id,),
+            "SELECT id, nombre, apellido, aula_id FROM usuarios WHERE id = %s AND rol = 'alumno'",
+            (usuario_id,),
             fetchone=True,
         )
     except RuntimeError as e:
@@ -351,24 +352,25 @@ async def dashboard_alumno(alumno_id: int):
 
     try:
         resumen = ejecutar_consulta(
-            "SELECT COALESCE(SUM(puntos), 0) AS puntos_totales, "
+            "SELECT COALESCE(SUM(puntos_ganados), 0) AS puntos_totales, "
             "       COUNT(*) AS total_registros "
-            "FROM registro_residuos WHERE alumno_id = %s",
-            (alumno_id,),
+            "FROM registro_residuos WHERE usuario_id = %s",
+            (usuario_id,),
             fetchone=True,
         )
         logros = ejecutar_consulta(
-            "SELECT id, titulo, descripcion, fecha_obtencion "
-            "FROM logros WHERE alumno_id = %s ORDER BY fecha_obtencion DESC",
-            (alumno_id,),
+            "SELECT id, nombre_medalla, fecha_ganado "
+            "FROM logros WHERE usuario_id = %s ORDER BY fecha_ganado DESC",
+            (usuario_id,),
             fetchall=True,
         )
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
     return {
-        "alumno_id": alumno["id"],
+        "usuario_id": alumno["id"],
         "nombre": alumno["nombre"],
+        "apellido": alumno["apellido"],
         "aula_id": alumno["aula_id"],
         "puntos_totales": resumen["puntos_totales"] if resumen else 0,
         "total_registros": resumen["total_registros"] if resumen else 0,
@@ -378,14 +380,14 @@ async def dashboard_alumno(alumno_id: int):
 
 # ── 5. DASHBOARD DOCENTE ─────────────────────
 
-@app.get("/api/dashboard/docente/{docente_id}")
-async def dashboard_docente(docente_id: int):
+@app.get("/api/dashboard/docente/{usuario_id}")
+async def dashboard_docente(usuario_id: int):
     """
     Datos para el panel del docente: lista de hasta 25 alumnos de su aula
     con sus puntos individuales, y el ranking del aula a nivel escuela.
 
     Path params:
-        docente_id: ID del docente.
+        usuario_id: ID del usuario con rol docente.
 
     Returns:
         dict con aula, lista de alumnos (top 25) y posición del aula en ranking.
@@ -396,8 +398,8 @@ async def dashboard_docente(docente_id: int):
     """
     try:
         docente = ejecutar_consulta(
-            "SELECT id, nombre, aula_id FROM usuarios WHERE id = %s AND rol = 'docente'",
-            (docente_id,),
+            "SELECT id, nombre, apellido, aula_id FROM usuarios WHERE id = %s AND rol = 'docente'",
+            (usuario_id,),
             fetchone=True,
         )
     except RuntimeError as e:
@@ -411,18 +413,18 @@ async def dashboard_docente(docente_id: int):
     try:
         # Info del aula
         aula = ejecutar_consulta(
-            "SELECT id, nombre, puntos_totales FROM aulas WHERE id = %s",
+            "SELECT id, grado_seccion, puntos_totales FROM aulas WHERE id = %s",
             (aula_id,),
             fetchone=True,
         )
 
         # Top 25 alumnos del aula por puntos
         alumnos = ejecutar_consulta(
-            "SELECT u.id, u.nombre, COALESCE(SUM(r.puntos), 0) AS puntos "
+            "SELECT u.id, u.nombre, u.apellido, COALESCE(SUM(r.puntos_ganados), 0) AS puntos "
             "FROM usuarios u "
-            "LEFT JOIN registro_residuos r ON r.alumno_id = u.id "
+            "LEFT JOIN registro_residuos r ON r.usuario_id = u.id "
             "WHERE u.aula_id = %s AND u.rol = 'alumno' "
-            "GROUP BY u.id, u.nombre "
+            "GROUP BY u.id, u.nombre, u.apellido "
             "ORDER BY puntos DESC "
             "LIMIT 25",
             (aula_id,),
@@ -431,7 +433,7 @@ async def dashboard_docente(docente_id: int):
 
         # Ranking del aula entre todas las aulas
         ranking = ejecutar_consulta(
-            "SELECT id, nombre, puntos_totales FROM aulas ORDER BY puntos_totales DESC",
+            "SELECT id, grado_seccion, puntos_totales FROM aulas ORDER BY puntos_totales DESC",
             fetchall=True,
         )
     except RuntimeError as e:
@@ -444,7 +446,7 @@ async def dashboard_docente(docente_id: int):
     )
 
     return {
-        "docente": {"id": docente["id"], "nombre": docente["nombre"]},
+        "docente": {"usuario_id": docente["id"], "nombre": docente["nombre"], "apellido": docente["apellido"]},
         "aula": aula,
         "posicion_ranking": posicion,
         "total_aulas": len(ranking) if ranking else 0,
@@ -474,23 +476,23 @@ async def dashboard_director():
         )
 
         por_categoria = ejecutar_consulta(
-            "SELECT categoria, COUNT(*) AS cantidad, COALESCE(SUM(puntos), 0) AS puntos "
-            "FROM registro_residuos GROUP BY categoria ORDER BY cantidad DESC",
+            "SELECT tipo_residuo, COUNT(*) AS cantidad, COALESCE(SUM(puntos_ganados), 0) AS puntos "
+            "FROM registro_residuos GROUP BY tipo_residuo ORDER BY cantidad DESC",
             fetchall=True,
         )
 
         ranking_aulas = ejecutar_consulta(
-            "SELECT id, nombre, puntos_totales FROM aulas ORDER BY puntos_totales DESC",
+            "SELECT id, grado_seccion, puntos_totales FROM aulas ORDER BY puntos_totales DESC",
             fetchall=True,
         )
 
         actividad_reciente = ejecutar_consulta(
-            "SELECT r.id, u.nombre AS alumno, a.nombre AS aula, "
-            "       r.categoria, r.puntos, r.fecha "
+            "SELECT r.id, u.nombre AS alumno, u.apellido, a.grado_seccion AS aula, "
+            "       r.tipo_residuo, r.puntos_ganados, r.fecha_registro "
             "FROM registro_residuos r "
-            "JOIN usuarios u ON u.id = r.alumno_id "
-            "JOIN aulas a ON a.id = r.aula_id "
-            "ORDER BY r.fecha DESC LIMIT 20",
+            "JOIN usuarios u ON u.id = r.usuario_id "
+            "JOIN aulas a ON a.id = u.aula_id "
+            "ORDER BY r.fecha_registro DESC LIMIT 20",
             fetchall=True,
         )
 
@@ -516,20 +518,7 @@ async def dashboard_director():
     }
 
 
-# ─────────────────────────────────────────────
-# Utilidades internas
-# ─────────────────────────────────────────────
-
 def _serializar_fechas(registros: list[dict]) -> list[dict]:
-    """
-    Convierte objetos datetime en strings ISO 8601 para JSON serialization.
-
-    Args:
-        registros: lista de dicts provenientes de la BD.
-
-    Returns:
-        La misma lista con campos datetime convertidos a str.
-    """
     for reg in registros:
         for key, val in reg.items():
             if isinstance(val, datetime):
