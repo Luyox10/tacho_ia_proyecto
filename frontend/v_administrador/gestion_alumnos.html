@@ -77,9 +77,10 @@
                 </div>
                 <div class="form-group">
                     <label for="f-grado">Grade/Section</label>
-                    <select id="f-grado" class="form-input" required>
+                    <select id="f-grado" class="form-input" required onchange="_actualizarCupoHint()">
                         <option value="">Select...</option>
                     </select>
+                    <small id="cupo-hint" style="font-size:0.78rem;font-weight:600;margin-top:4px;display:block;"></small>
                 </div>
                 <div class="form-group">
                     <label for="f-contrasena">Password <span id="pwd-hint" style="font-size:0.75rem;color:var(--eco-text-muted);font-weight:400;">(required for new student)</span></label>
@@ -110,40 +111,56 @@
         }
 
         let allStudents = [];
-        let allAulas = [];
+        let allAulas    = [];   // info completa con cupos
 
         async function loadData() {
             try {
-                // Fetch real alumnos and aulas from DB
-                const [resAlumnos, resDirector] = await Promise.all([
+                const [resAlumnos, resAulas] = await Promise.all([
                     fetch(`${CONFIG.API_BASE_URL}/api/admin/alumnos`),
-                    fetch(`${CONFIG.API_BASE_URL}/api/dashboard/director`)
+                    fetch(`${CONFIG.API_BASE_URL}/api/admin/aulas/info`)
                 ]);
                 const dataAlumnos = await resAlumnos.json();
-                const dataDirector = await resDirector.json();
+                const dataAulas   = await resAulas.json();
 
-                allAulas = dataDirector.ranking_aulas || [];
+                allAulas = dataAulas.aulas || [];
+                _populateAulaSelect();
 
-                // Populate grade select
-                const select = document.getElementById('f-grado');
-                select.innerHTML = '<option value="">Select...</option>' +
-                    allAulas.map(a => `<option value="${a.id}">${a.grado_seccion}</option>`).join('');
-
-                // Map real alumnos from database
                 allStudents = (dataAlumnos.alumnos || []).map(a => ({
-                    id: a.id,
-                    dni: a.dni || '--',
-                    nombre: a.nombre || '--',
-                    apellido: a.apellido || '',
-                    aula_id: a.aula_id,
-                    grado_seccion: a.grado_seccion || 'Sin aula',
+                    id: a.id, dni: a.dni || '--',
+                    nombre: a.nombre || '--', apellido: a.apellido || '',
+                    aula_id: a.aula_id, grado_seccion: a.grado_seccion || 'Sin aula',
                     puntos: a.puntos || 0
                 }));
-
                 renderTable(allStudents);
             } catch (err) {
                 console.error('Load error:', err);
             }
+        }
+
+        function _populateAulaSelect(aulaSeleccionada = null) {
+            const select = document.getElementById('f-grado');
+            select.innerHTML = '<option value="">Select...</option>' +
+                allAulas.map(a => {
+                    const cupos = a.cupos_disponibles;
+                    const llena = cupos === 0;
+                    const label = `${a.grado_seccion} — ${cupos} cupo${cupos !== 1 ? 's' : ''}`;
+                    return `<option value="${a.id}" ${llena ? 'disabled' : ''} ${aulaSeleccionada == a.id ? 'selected' : ''}>${label}${llena ? ' (LLENA)' : ''}</option>`;
+                }).join('');
+            _actualizarCupoHint();
+        }
+
+        function _actualizarCupoHint() {
+            const select  = document.getElementById('f-grado');
+            const hint    = document.getElementById('cupo-hint');
+            const aulaId  = parseInt(select.value);
+            const aula    = allAulas.find(a => a.id === aulaId);
+            if (!hint) return;
+            if (!aula) { hint.textContent = ''; return; }
+            const cupos = aula.cupos_disponibles;
+            hint.textContent = cupos > 0
+                ? `✅ Quedan ${cupos} cupo${cupos !== 1 ? 's' : ''} disponible${cupos !== 1 ? 's' : ''}`
+                : '❌ Aula llena (máximo 25 alumnos)';
+            hint.style.color = cupos > 0 ? '#2e7d32' : '#c62828';
         }
 
         function renderTable(students) {
@@ -194,7 +211,7 @@
                 document.getElementById('f-dni').readOnly = true;
                 document.getElementById('f-nombre').value = student.nombre;
                 document.getElementById('f-apellido').value = student.apellido;
-                document.getElementById('f-grado').value = student.aula_id || '';
+                _populateAulaSelect(student.aula_id);
                 pwdInput.required = false;
                 pwdInput.value = '';
                 pwdHint.textContent = '(leave blank to keep current password)';
@@ -203,6 +220,7 @@
                 document.getElementById('student-form').reset();
                 document.getElementById('edit-id').value = '';
                 document.getElementById('f-dni').readOnly = false;
+                _populateAulaSelect();
                 pwdInput.required = true;
                 pwdHint.textContent = '(required for new student)';
             }
@@ -284,8 +302,17 @@
                 }
 
                 // Recargar la tabla desde la API
+                const data = await res.json();
                 await loadData();
                 closeModal();
+                // Mostrar cupos restantes si es creación
+                if (!editId && data.cupos_restantes !== undefined) {
+                    const cupos = data.cupos_restantes;
+                    const msg = cupos > 0
+                        ? `✅ Alumno registrado. Quedan ${cupos} cupo${cupos !== 1 ? 's' : ''} en el aula.`
+                        : '✅ Alumno registrado. ⚠️ El aula está ahora llena (25/25).';
+                    setTimeout(() => alert(msg), 100);
+                }
             } catch (err) {
                 errorBox.textContent = 'Network error: ' + err.message;
                 errorBox.style.display = 'block';

@@ -117,18 +117,15 @@
 
         async function loadData() {
             try {
-                const [resDocentes, resDirector] = await Promise.all([
+                const [resDocentes, resAulas] = await Promise.all([
                     fetch(`${CONFIG.API_BASE_URL}/api/admin/docentes`),
-                    fetch(`${CONFIG.API_BASE_URL}/api/dashboard/director`)
+                    fetch(`${CONFIG.API_BASE_URL}/api/admin/aulas/info`)
                 ]);
                 const dataDocentes = await resDocentes.json();
-                const dataDirector = await resDirector.json();
+                const dataAulas    = await resAulas.json();
 
-                allAulas = dataDirector.ranking_aulas || [];
-
-                const select = document.getElementById('f-aula');
-                select.innerHTML = '<option value="">Seleccionar aula...</option>' +
-                    allAulas.map(a => `<option value="${a.id}">${a.grado_seccion}</option>`).join('');
+                allAulas = dataAulas.aulas || [];
+                _populateAulaSelect();
 
                 allTutors = (dataDocentes.docentes || []).map(d => ({
                     id: d.id,
@@ -145,6 +142,17 @@
             } catch (err) {
                 console.error('Load error:', err);
             }
+        }
+
+        function _populateAulaSelect(aulaSeleccionada = null) {
+            const select = document.getElementById('f-aula');
+            select.innerHTML = '<option value="">Seleccionar aula...</option>' +
+                allAulas.map(a => {
+                    const ocupada  = !!a.docente;
+                    const quien    = ocupada ? ` — ${a.docente.nombre} ${a.docente.apellido}` : '';
+                    const label    = `${a.grado_seccion}${quien}`;
+                    return `<option value="${a.id}" ${ocupada ? 'disabled' : ''} ${aulaSeleccionada == a.id ? 'selected' : ''}>${label}${ocupada ? ' (ocupada)' : ''}</option>`;
+                }).join('');
         }
 
         function renderTutorsTable() {
@@ -199,7 +207,12 @@
                 document.getElementById('f-dni').readOnly = true;
                 document.getElementById('f-nombre').value = docente.nombre;
                 document.getElementById('f-apellido').value = docente.apellido;
-                document.getElementById('f-aula').value = docente.aula_id || '';
+                _populateAulaSelect(docente.aula_id);  // al editar, su propia aula siempre visible
+                // habilitar la opción de la aula actual aunque esté "ocupada" por él mismo
+                const select = document.getElementById('f-aula');
+                Array.from(select.options).forEach(opt => {
+                    if (parseInt(opt.value) === docente.aula_id) opt.disabled = false;
+                });
                 pwdInput.required = false;
                 pwdInput.value = '';
                 pwdHint.textContent = '(dejar en blanco para conservar la actual)';
@@ -208,6 +221,7 @@
                 document.getElementById('tutor-form').reset();
                 document.getElementById('edit-id').value = '';
                 document.getElementById('f-dni').readOnly = false;
+                _populateAulaSelect();
                 pwdInput.required = true;
                 pwdHint.textContent = '(obligatoria para nuevo docente)';
             }

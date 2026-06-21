@@ -56,6 +56,7 @@ app.add_middleware(
 
 CATEGORIAS = ["glass", "organic", "metal", "others", "plastic", "paper"]
 IMG_SIZE = (224, 224)
+MAX_ALUMNOS_POR_AULA = 25
 
 TACHO_INFO = {
     "glass":   {"nombre": "Vidrio",         "tacho": "Tacho Blanco"},
@@ -217,12 +218,17 @@ async def login(dni: Optional[str] = Form(None), correo: Optional[str] = Form(No
     if usuario["contrasena_hash"] != _hashear(contrasena):
         raise HTTPException(status_code=401, detail="Contraseña incorrecta.")
 
+    # primer_login = True cuando la contraseña ingresada es igual al DNI
+    # (el director asigna el DNI como contraseña provisional al crear el usuario)
+    primer_login = (contrasena == (dni or ""))
+
     return {
-        "usuario_id": usuario["id"],
-        "nombre": usuario["nombre"],
-        "apellido": usuario["apellido"],
-        "rol": usuario["rol"],
-        "aula_id": usuario["aula_id"],
+        "usuario_id":  usuario["id"],
+        "nombre":      usuario["nombre"],
+        "apellido":    usuario["apellido"],
+        "rol":         usuario["rol"],
+        "aula_id":     usuario["aula_id"],
+        "primer_login": primer_login,
     }
 
 
@@ -792,6 +798,18 @@ async def crear_alumno(
         if existente:
             raise HTTPException(status_code=409, detail=f"El DNI {dni} ya está registrado.")
 
+        conteo = ejecutar_consulta(
+            "SELECT COUNT(*) AS total FROM usuarios WHERE rol = 'alumno' AND aula_id = %s",
+            (aula_id,),
+            fetchone=True,
+        )
+        total_actual = conteo["total"] if conteo else 0
+        if total_actual >= MAX_ALUMNOS_POR_AULA:
+            raise HTTPException(
+                status_code=409,
+                detail=f"El aula ya alcanzó el máximo de {MAX_ALUMNOS_POR_AULA} alumnos.",
+            )
+
         nuevo_id = ejecutar_consulta(
             "INSERT INTO usuarios (dni, nombre, apellido, contrasena_hash, rol, aula_id, fecha_creacion) "
             "VALUES (%s, %s, %s, %s, 'alumno', %s, %s)",
@@ -810,6 +828,7 @@ async def crear_alumno(
         "apellido": apellido,
         "rol": "alumno",
         "aula_id": aula_id,
+        "cupos_restantes": MAX_ALUMNOS_POR_AULA - total_actual - 1,
     }
 
 
@@ -900,7 +919,57 @@ async def eliminar_alumno(alumno_id: int):
     return {"eliminado": True, "id": alumno_id}
 
 
-# ── 12. ADMIN: CREAR DOCENTE ────────────────────────
+# ── 12. ADMIN: INFO DE AULAS (cupos + docente asignado) ──
+@app.get("/api/admin/aulas/info")
+async def info_aulas():
+    """
+    Devuelve cada aula con:
+      - docente asignado (id, nombre, apellido) o null
+      - total_alumnos inscritos
+      - cupos_disponibles (MAX 25)
+
+    Usado por el frontend para bloquear aulas llenas o con docente.
+    """
+    try:
+        aulas = ejecutar_consulta(
+            "SELECT id, grado_seccion, puntos_totales FROM aulas ORDER BY grado_seccion ASC",
+            fetchall=True,
+        ) or []
+
+        docentes = ejecutar_consulta(
+            "SELECT id, nombre, apellido, aula_id FROM usuarios WHERE rol = 'docente' AND aula_id IS NOT NULL",
+            fetchall=True,
+        ) or []
+
+        conteos = ejecutar_consulta(
+            "SELECT aula_id, COUNT(*) AS total FROM usuarios WHERE rol = 'alumno' AND aula_id IS NOT NULL GROUP BY aula_id",
+            fetchall=True,
+        ) or []
+
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    docente_por_aula = {d["aula_id"]: d for d in docentes}
+    conteo_por_aula  = {c["aula_id"]: c["total"] for c in conteos}
+
+    resultado = []
+    for a in aulas:
+        aid     = a["id"]
+        total   = conteo_por_aula.get(aid, 0)
+        docente = docente_por_aula.get(aid)
+        resultado.append({
+            "id":               aid,
+            "grado_seccion":    a["grado_seccion"],
+            "puntos_totales":   a["puntos_totales"],
+            "docente":          {"id": docente["id"], "nombre": docente["nombre"], "apellido": docente["apellido"]} if docente else None,
+            "total_alumnos":    total,
+            "cupos_disponibles": max(0, MAX_ALUMNOS_POR_AULA - total),
+        })
+
+    return {"aulas": resultado}
+
+
+# ── 13. ADMIN: CREAR DOCENTE ────────────────────────
 @app.post("/api/admin/docentes")
 async def crear_docente(
     dni: str = Form(...),
@@ -928,6 +997,17 @@ async def crear_docente(
         )
         if existente:
             raise HTTPException(status_code=409, detail=f"El DNI {dni} ya está registrado.")
+
+        docente_aula = ejecutar_consulta(
+            "SELECT id, nombre, apellido FROM usuarios WHERE rol = 'docente' AND aula_id = %s",
+            (aula_id,),
+            fetchone=True,
+        )
+        if docente_aula:
+            raise HTTPException(
+                status_code=409,
+                detail=f"El aula ya tiene un docente asignado: {docente_aula['nombre']} {docente_aula['apellido']}.",
+            )
 
         nuevo_id = ejecutar_consulta(
             "INSERT INTO usuarios (dni, nombre, apellido, contrasena_hash, rol, aula_id, fecha_creacion) "
