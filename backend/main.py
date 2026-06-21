@@ -191,14 +191,14 @@ async def login(dni: Optional[str] = Form(None), email: Optional[str] = Form(Non
     }
 
 
-@app.get("/probar-db") # O @app.route("/probar-db") si es Flask
+@app.get("/probar-db")
 def probar_db():
     try:
-        # Una consulta simple que no requiere tablas para verificar la conexión
-        resultado = ejecutar_consulta("SELECT 1 AS conexion;")
-        return {"status": "Conectado a TiDB con éxito", "resultado": resultado}
+        # Esto le pide a TiDB que nos muestre cómo es la tabla por dentro
+        columnas = ejecutar_consulta("DESCRIBE registro_residuos;")
+        return {"status": "Estructura de la tabla", "columnas": columnas}
     except Exception as e:
-        return {"status": "Error de conexión", "error": str(e)}
+        return {"status": "Error", "error": str(e)}
 
 # ── 2. IDENTIFICACIÓN RÁPIDA (TACHO FÍSICO) ──
 
