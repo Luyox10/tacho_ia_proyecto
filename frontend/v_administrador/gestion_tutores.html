@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Tutores - Eco-School High</title>
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: rgba(26, 58, 42, 0.92);
+            backdrop-filter: blur(12px);
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+        }
+
+        .sidebar-logo svg { width: 28px; height: 28px; fill: #fff; }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: var(--eco-radius-sm);
+            transition: var(--eco-transition);
+            text-decoration: none;
+        }
+
+        .sidebar-link:hover, .sidebar-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: rgba(76, 175, 80, 0.2);
+            color: #81c784;
+        }
+
+        .sidebar-icon { font-size: 1.1rem; }
+
+        .admin-main {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header h2 { font-size: 1.5rem; }
+
+        /* Cards grid for tutors */
+        .tutors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .tutor-card {
+            padding: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .tutor-avatar {
+            width: 48px;
+            height: 48px;
+            background: var(--eco-success-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .tutor-info {
+            flex: 1;
+        }
+
+        .tutor-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--eco-text);
+            margin-bottom: 0.2rem;
+        }
+
+        .tutor-aula {
+            font-size: 0.8rem;
+            color: var(--eco-text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .tutor-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tutor-actions .action-btn {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--eco-transition);
+        }
+
+        .action-btn.reassign {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .action-btn.reassign:hover { background: #c8e6c9; }
+
+        .action-btn.remove {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .action-btn.remove:hover { background: #ffcdd2; }
+
+        /* Table alternative */
+        .crud-card { padding: 1.5rem; }
+
+        .crud-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .crud-table th {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--eco-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.7rem 0.75rem;
+            text-align: left;
+            border-bottom: 2px solid #e0e8e0;
+        }
+
+        .crud-table td {
+            font-size: 0.85rem;
+            padding: 0.7rem 0.75rem;
+            border-bottom: 1px solid #f0f4f0;
+            color: var(--eco-text);
+        }
+
+        .crud-table tr:hover { background: rgba(46, 125, 50, 0.02); }
+
+        .table-wrapper { overflow-x: auto; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .status-badge.active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-badge.unassigned {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 1rem;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: var(--eco-radius);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 440px;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--eco-text);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--eco-transition);
+        }
+
+        .modal-close:hover { background: #e0e0e0; }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        .btn-cancel {
+            padding: 0.6rem 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #f5f5f5;
+            border: none;
+            border-radius: var(--eco-radius-sm);
+            cursor: pointer;
+            color: var(--eco-text);
+            transition: var(--eco-transition);
+        }
+
+        .btn-cancel:hover { background: #e0e0e0; }
+
+        @media (max-width: 900px) {
+            .admin-layout { grid-template-columns: 1fr; }
+            .sidebar {
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 1rem;
+            }
+            .sidebar-logo { display: none; }
+            .tutors-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-logo">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
+                <span>ECO-SCHOOL</span>
+            </div>
+            <a href="dashboard.html" class="sidebar-link"><span class="sidebar-icon">&#9632;</span> Global Dashboard</a>
+            <a href="gestion_alumnos.html" class="sidebar-link"><span class="sidebar-icon">&#128101;</span> Manage Students</a>
+            <a href="gestion_tutores.html" class="sidebar-link active"><span class="sidebar-icon">&#128188;</span> Assign Tutors</a>
+            <a href="auditoria_docente.html" class="sidebar-link"><span class="sidebar-icon">&#128203;</span> Teacher Audit Log</a>
+        </nav>
+
+        <main class="admin-main">
+            <div class="page-header">
+                <h2>Assign Tutors</h2>
+                <button class="btn btn-primary" onclick="openModal()">+ Assign New Tutor</button>
+            </div>
+
+            <!-- Tutors Table -->
+            <div class="crud-card glass-card-static">
+                <div class="table-wrapper">
+                    <table class="crud-table">
+                        <thead>
+                            <tr>
+                                <th>Tutor Name</th>
+                                <th>Email</th>
+                                <th>Assigned Classroom</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tutors-body">
+                            <tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--eco-text-muted);">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Unassigned Classrooms -->
+            <h3 style="margin: 2rem 0 1rem; font-size: 1.1rem;">Classrooms Overview</h3>
+            <div class="tutors-grid" id="classrooms-grid">
+                <div style="color: var(--eco-text-muted); padding: 2rem; text-align: center;">Cargando...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Assign Tutor -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="modal-title">ASSIGN TUTOR TO CLASSROOM</div>
+            <form id="tutor-form" onsubmit="return saveTutor(event)">
+                <div class="form-group">
+                    <label for="f-tutor-name">Tutor Name</label>
+                    <input type="text" id="f-tutor-name" class="form-input" placeholder="Full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="f-tutor-email">Email</label>
+                    <input type="email" id="f-tutor-email" class="form-input" placeholder="tutor@eco-school.edu" required>
+                </div>
+                <div class="form-group">
+                    <label for="f-tutor-aula">Assign to Classroom</label>
+                    <select id="f-tutor-aula" class="form-input" required>
+                        <option value="">Select classroom...</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign Tutor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js"></script>
+    <script>
+        // Session verification
+        const user = JSON.parse(sessionStorage.getItem('eco_user') || localStorage.getItem('eco_user') || '{}');
+        if (!user.usuario_id || user.rol !== 'director') {
+            window.location.href = '../index.html';
+        }
+
+        let allTutors = [];
+        let allAulas = [];
+
+        async function loadData() {
+            try {
+                // Fetch real docentes from DB
+                const [resDocentes, resDirector] = await Promise.all([
+                    fetch(`${CONFIG.API_BASE_URL}/api/admin/docentes`),
+                    fetch(`${CONFIG.API_BASE_URL}/api/dashboard/director`)
+                ]);
+                const dataDocentes = await resDocentes.json();
+                const dataDirector = await resDirector.json();
+
+                allAulas = dataDirector.ranking_aulas || [];
+
+                // Populate aula select
+                const select = document.getElementById('f-tutor-aula');
+                select.innerHTML = '<option value="">Select classroom...</option>' +
+                    allAulas.map(a => `<option value="${a.id}">${a.grado_seccion}</option>`).join('');
+
+                // Map real docentes from database
+                allTutors = (dataDocentes.docentes || []).map(d => ({
+                    id: d.id,
+                    dni: d.dni || '--',
+                    nombre: `${d.nombre} ${d.apellido || ''}`.trim(),
+                    email: d.correo || '--',
+                    aula: d.grado_seccion || 'Sin aula asignada',
+                    aula_id: d.aula_id,
+                    assigned: !!d.aula_id
+                }));
+
+                renderTutorsTable();
+                renderClassrooms();
+
+            } catch (err) {
+                console.error('Load error:', err);
+            }
+        }
+
+        function renderTutorsTable() {
+            const body = document.getElementById('tutors-body');
+            if (allTutors.length === 0) {
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem;">No tutors found</td></tr>';
+                return;
+            }
+
+            body.innerHTML = allTutors.map(t => `
+                <tr>
+                    <td><strong>${t.nombre}</strong></td>
+                    <td>${t.email}</td>
+                    <td>${t.aula}</td>
+                    <td><span class="status-badge ${t.assigned ? 'active' : 'unassigned'}">${t.assigned ? 'Active' : 'Unassigned'}</span></td>
+                    <td>
+                        <div class="table-actions" style="display:flex; gap:0.4rem;">
+                            <button class="action-btn reassign" onclick="reassignTutor(${t.id})">Reassign</button>
+                            <button class="action-btn remove" onclick="removeTutor(${t.id})">Remove</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderClassrooms() {
+            const grid = document.getElementById('classrooms-grid');
+            grid.innerHTML = allAulas.map(a => {
+                const tutor = allTutors.find(t => t.aula_id === a.id);
+                return `
+                    <div class="tutor-card glass-card-static">
+                        <div class="tutor-avatar">&#127979;</div>
+                        <div class="tutor-info">
+                            <div class="tutor-name">${a.grado_seccion}</div>
+                            <div class="tutor-aula">${tutor ? tutor.nombre : 'Sin tutor asignado'}</div>
+                            <div class="tutor-aula">Puntos: ${a.puntos_totales || 0}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openModal() {
+            document.getElementById('modal-overlay').classList.add('show');
+            document.getElementById('tutor-form').reset();
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('show');
+        }
+
+        function saveTutor(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('f-tutor-name').value;
+            const email = document.getElementById('f-tutor-email').value;
+            const aulaSelect = document.getElementById('f-tutor-aula');
+            const aulaId = parseInt(aulaSelect.value);
+            const aulaText = aulaSelect.selectedOptions[0]?.text || '--';
+
+            allTutors.push({
+                id: Date.now(),
+                nombre: nombre,
+                email: email,
+                aula: aulaText,
+                aula_id: aulaId,
+                assigned: true
+            });
+
+            renderTutorsTable();
+            renderClassrooms();
+            closeModal();
+            return false;
+        }
+
+        function reassignTutor(id) {
+            const tutor = allTutors.find(t => t.id === id);
+            if (tutor) {
+                openModal();
+                document.getElementById('f-tutor-name').value = tutor.nombre;
+                document.getElementById('f-tutor-email').value = tutor.email;
+            }
+        }
+
+        function removeTutor(id) {
+            if (confirm('Remove this tutor assignment?')) {
+                allTutors = allTutors.filter(t => t.id !== id);
+                renderTutorsTable();
+                renderClassrooms();
+            }
+        }
+
+        // Close modal on overlay click
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeModal();
+        });
+
+        loadData();
+    </script>
+</body>
+</html>

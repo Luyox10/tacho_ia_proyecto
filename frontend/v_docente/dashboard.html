@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Docente - Eco-School High</title>
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .dashboard-page {
+            min-height: 100vh;
+        }
+
+        .dashboard-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Warning card */
+        .warning-card {
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--eco-radius);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .warning-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 0 var(--eco-radius) 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .warning-card .warning-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .warning-card .warning-content h4 {
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .warning-card .warning-content p {
+            font-size: 0.8rem;
+            margin: 0;
+        }
+
+        .warning-card .warning-arrows {
+            margin-left: auto;
+            font-size: 1.5rem;
+            opacity: 0.5;
+        }
+
+        /* Dynamic status classes */
+        .warning-red {
+            background: #ffebee;
+            border: 1.5px solid #ef5350;
+            color: #b71c1c;
+        }
+
+        .warning-red h4 { color: #d32f2f; }
+        .warning-red .warning-icon { color: #d32f2f; }
+
+        .warning-yellow {
+            background: #fff8e1;
+            border: 1.5px solid #ffb300;
+            color: #e65100;
+        }
+
+        .warning-yellow h4 { color: #f57f17; }
+        .warning-yellow .warning-icon { color: #f57f17; }
+
+        .warning-green {
+            background: #e8f5e9;
+            border: 1.5px solid #66bb6a;
+            color: #1b5e20;
+        }
+
+        .warning-green h4 { color: #2e7d32; }
+        .warning-green .warning-icon { color: #2e7d32; }
+
+        /* Top layout */
+        .top-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Aula info card */
+        .aula-info {
+            padding: 1.5rem;
+        }
+
+        .aula-info .aula-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--eco-primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .aula-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .aula-stat {
+            text-align: center;
+            padding: 0.75rem;
+            background: rgba(46, 125, 50, 0.05);
+            border-radius: var(--eco-radius-sm);
+        }
+
+        .aula-stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--eco-primary);
+        }
+
+        .aula-stat-label {
+            font-size: 0.7rem;
+            color: var(--eco-text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Students table */
+        .students-section {
+            padding: 1.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .student-count {
+            font-size: 0.8rem;
+            color: var(--eco-text-muted);
+            font-weight: 600;
+        }
+
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .students-table th {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--eco-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+            border-bottom: 2px solid #e0e8e0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .students-table th:hover {
+            color: var(--eco-primary);
+        }
+
+        .students-table td {
+            font-size: 0.85rem;
+            padding: 0.65rem 0.75rem;
+            border-bottom: 1px solid #f0f4f0;
+            color: var(--eco-text);
+        }
+
+        .students-table tr:hover {
+            background: rgba(46, 125, 50, 0.03);
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .rank-badge.top-3 {
+            background: var(--eco-primary);
+            color: #fff;
+        }
+
+        .rank-badge.normal {
+            background: #f0f4f0;
+            color: var(--eco-text);
+        }
+
+        /* Participation bars */
+        .participation-bars {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            height: 20px;
+        }
+
+        .participation-bar {
+            width: 4px;
+            background: var(--eco-primary);
+            border-radius: 2px;
+            min-height: 3px;
+        }
+
+        /* Responsive table wrapper */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        /* Export button */
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #fff;
+            border: 1.5px solid #e0e8e0;
+            border-radius: var(--eco-radius-sm);
+            color: var(--eco-text);
+            cursor: pointer;
+            transition: var(--eco-transition);
+        }
+
+        .export-btn:hover {
+            border-color: var(--eco-primary);
+            color: var(--eco-primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .top-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .aula-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="eco-header">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/>
+            </svg>
+            <span>ECO-SCHOOL HIGH</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span id="header-user" style="font-size: 0.9rem;">--</span>
+            <select id="header-aula" class="form-input" style="width: auto; padding: 0.4rem 0.75rem; font-size: 0.8rem;">
+                <option>--</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="dashboard-page">
+        <div class="dashboard-content">
+            <!-- Warning Card (dynamic Red/Yellow/Green) -->
+            <div class="warning-card warning-green" id="warning-card">
+                <span class="warning-icon">&#9888;</span>
+                <div class="warning-content">
+                    <h4 id="warning-title">Cargando estado...</h4>
+                    <p id="warning-text">Verificando posicion del aula en el ranking.</p>
+                </div>
+                <span class="warning-arrows">&#187;</span>
+            </div>
+
+            <div class="top-grid">
+                <!-- Aula Info -->
+                <div class="aula-info glass-card-static">
+                    <div class="aula-name" id="aula-name">--</div>
+                    <p style="font-size: 0.8rem; color: var(--eco-text-muted); margin:0;">Classroom Rank: <strong id="aula-rank">--</strong></p>
+                    <div class="aula-stats">
+                        <div class="aula-stat">
+                            <div class="aula-stat-value" id="aula-points">--</div>
+                            <div class="aula-stat-label">Puntos Totales</div>
+                        </div>
+                        <div class="aula-stat">
+                            <div class="aula-stat-value" id="aula-students">--</div>
+                            <div class="aula-stat-label">Alumnos</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Table -->
+                <div class="students-section glass-card-static">
+                    <div class="section-header">
+                        <span class="section-title">STUDENTS ANALYTICS TABLE</span>
+                        <button class="export-btn" onclick="exportData()">&#128196; Export PDF</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="students-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Student Name</th>
+                                    <th>Participation</th>
+                                    <th>Points</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-body">
+                                <tr><td colspan="4" style="text-align:center; color: var(--eco-text-muted);">Cargando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="student-count" id="student-count-label">Mostrando 0 alumnos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js"></script>
+    <script>
+        // Session verification
+        const user = JSON.parse(sessionStorage.getItem('eco_user') || localStorage.getItem('eco_user') || '{}');
+        if (!user.usuario_id || (user.rol !== 'docente')) {
+            window.location.href = '../index.html';
+        }
+
+        document.getElementById('header-user').textContent = `${user.nombre || '--'} - ${user.apellido || ''}`;
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/dashboard/docente/${user.usuario_id}`);
+                const data = await res.json();
+
+                // Aula info
+                const aula = data.aula || {};
+                document.getElementById('aula-name').textContent = aula.grado_seccion || '--';
+                document.getElementById('aula-points').textContent = aula.puntos_totales || 0;
+                document.getElementById('aula-students').textContent = (data.alumnos || []).length;
+                document.getElementById('header-aula').innerHTML = `<option>${aula.grado_seccion || '--'} (My Classroom)</option>`;
+
+                // Ranking position
+                const pos = data.posicion_ranking || '--';
+                const total = data.total_aulas || '--';
+                document.getElementById('aula-rank').textContent = `${pos} / ${total}`;
+
+                // Dynamic warning card
+                updateWarningCard(pos, total, aula);
+
+                // Students table
+                renderStudents(data.alumnos || []);
+
+            } catch (err) {
+                console.error('Dashboard docente error:', err);
+            }
+        }
+
+        function updateWarningCard(position, total, aula) {
+            const card = document.getElementById('warning-card');
+            const title = document.getElementById('warning-title');
+            const text = document.getElementById('warning-text');
+
+            // Remove all status classes
+            card.classList.remove('warning-red', 'warning-yellow', 'warning-green');
+
+            const ratio = position / total;
+
+            if (ratio > 0.6) {
+                // Bottom 40% = RED
+                card.classList.add('warning-red');
+                title.textContent = 'RED';
+                text.textContent = `Action Required: Your classroom is in ${position}th place (${aula.puntos_totales || 0} points). Motivate your students during tutor hour!`;
+            } else if (ratio > 0.3) {
+                // Middle = YELLOW
+                card.classList.add('warning-yellow');
+                title.textContent = 'YELLOW';
+                text.textContent = `Your classroom is in ${position}th place. Keep encouraging students to recycle more!`;
+            } else {
+                // Top 30% = GREEN
+                card.classList.add('warning-green');
+                title.textContent = 'GREEN';
+                text.textContent = `Excellent! Your classroom is in ${position}${position === 1 ? 'st' : position === 2 ? 'nd' : 'rd'} place. Keep up the great work!`;
+            }
+        }
+
+        function renderStudents(alumnos) {
+            const body = document.getElementById('students-body');
+
+            if (alumnos.length === 0) {
+                body.innerHTML = '<tr><td colspan="4" style="text-align:center;">Sin alumnos registrados</td></tr>';
+                return;
+            }
+
+            body.innerHTML = alumnos.map((a, i) => {
+                const rankClass = i < 3 ? 'top-3' : 'normal';
+                // Generate fake weekly participation bars
+                const bars = Array.from({length: 5}, () => Math.floor(Math.random() * 18) + 3);
+                const barsHTML = bars.map(h => `<div class="participation-bar" style="height: ${h}px;"></div>`).join('');
+                return `
+                    <tr>
+                        <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
+                        <td>${a.nombre} ${a.apellido || ''}</td>
+                        <td><div class="participation-bars">${barsHTML}</div></td>
+                        <td><strong>${a.puntos || 0}</strong> pts</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('student-count-label').textContent = `Mostrando ${alumnos.length} alumnos`;
+        }
+
+        function exportData() {
+            alert('Funcion de exportacion PDF sera implementada proximamente.');
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>

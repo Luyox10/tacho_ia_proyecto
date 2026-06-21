@@ -265,15 +265,16 @@
 
                 if (res.ok && data.usuario_id) {
                     showAlert('success', `Bienvenido/a ${data.nombre}. Redirigiendo...`);
+                    sessionStorage.setItem('eco_user', JSON.stringify(data));
                     localStorage.setItem('eco_user', JSON.stringify(data));
 
                     setTimeout(() => {
                         if (data.rol === 'director') {
-                            window.location.href = 'v_administrador/admin_dashboard.html';
+                            window.location.href = 'v_administrador/dashboard.html';
                         } else if (data.rol === 'docente') {
-                            window.location.href = 'v_docente/docente_dashboard.html';
+                            window.location.href = 'v_docente/dashboard.html';
                         } else {
-                            window.location.href = 'v_estudiante/estudiante_dashboard.html';
+                            window.location.href = 'v_estudiante/dashboard.html';
                         }
                     }, 1000);
                 } else {

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Eco-School High</title>
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: rgba(26, 58, 42, 0.92);
+            backdrop-filter: blur(12px);
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+        }
+
+        .sidebar-logo svg {
+            width: 28px;
+            height: 28px;
+            fill: #fff;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: var(--eco-radius-sm);
+            transition: var(--eco-transition);
+            text-decoration: none;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: rgba(76, 175, 80, 0.2);
+            color: #81c784;
+        }
+
+        .sidebar-icon {
+            font-size: 1.1rem;
+        }
+
+        /* Main content */
+        .admin-main {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .admin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .admin-header h2 {
+            font-size: 1.5rem;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--eco-primary);
+            line-height: 1;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.75rem;
+            color: var(--eco-text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 0.25rem;
+        }
+
+        .stat-card .stat-icon {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.7;
+        }
+
+        /* Charts grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            padding: 1.5rem;
+        }
+
+        .chart-card h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--eco-text);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 280px;
+        }
+
+        /* Honor roll card */
+        .honor-card {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .honor-card h4 {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--eco-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+
+        .honor-avatar {
+            width: 64px;
+            height: 64px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            margin: 0 auto 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .honor-name {
+            font-weight: 700;
+            color: var(--eco-text);
+            font-size: 0.9rem;
+        }
+
+        .honor-detail {
+            font-size: 0.8rem;
+            color: var(--eco-text-muted);
+        }
+
+        /* Bottom grid */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .admin-layout {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 1rem;
+            }
+            .sidebar-logo { display: none; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .bottom-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-logo">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/>
+                </svg>
+                <span>ECO-SCHOOL</span>
+            </div>
+            <a href="dashboard.html" class="sidebar-link active">
+                <span class="sidebar-icon">&#9632;</span> Global Dashboard
+            </a>
+            <a href="gestion_alumnos.html" class="sidebar-link">
+                <span class="sidebar-icon">&#128101;</span> Manage Students
+            </a>
+            <a href="gestion_tutores.html" class="sidebar-link">
+                <span class="sidebar-icon">&#128188;</span> Assign Tutors
+            </a>
+            <a href="auditoria_docente.html" class="sidebar-link">
+                <span class="sidebar-icon">&#128203;</span> Teacher Audit Log
+            </a>
+        </nav>
+
+        <!-- Main -->
+        <main class="admin-main">
+            <div class="admin-header">
+                <h2>Global Dashboard</h2>
+                <span style="font-size: 0.85rem; color: var(--eco-text-muted);" id="admin-user">Admin</span>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card glass-card-static">
+                    <div class="stat-icon">&#128101;</div>
+                    <div class="stat-value" id="s-students">--</div>
+                    <div class="stat-label">Total Students</div>
+                </div>
+                <div class="stat-card glass-card-static">
+                    <div class="stat-icon">&#127979;</div>
+                    <div class="stat-value" id="s-classrooms">--</div>
+                    <div class="stat-label">Active Classrooms</div>
+                </div>
+                <div class="stat-card glass-card-static">
+                    <div class="stat-icon">&#128188;</div>
+                    <div class="stat-value" id="s-tutors">--</div>
+                    <div class="stat-label">Assign Tutors</div>
+                </div>
+                <div class="stat-card glass-card-static">
+                    <div class="stat-icon">&#9851;</div>
+                    <div class="stat-value" id="s-total">--</div>
+                    <div class="stat-label">Total Recycled</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-card glass-card-static">
+                    <h4>Total Recycling Volume (kg) per Category</h4>
+                    <div class="chart-container">
+                        <canvas id="chart-bar"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card glass-card-static">
+                    <h4>Classroom Distribution</h4>
+                    <div class="chart-container">
+                        <canvas id="chart-pie"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom: Ranking + Honor Roll -->
+            <div class="bottom-grid">
+                <div class="chart-card glass-card-static">
+                    <h4>Ranking de Aulas</h4>
+                    <table class="students-table" style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th style="font-size:0.7rem; padding:0.5rem; text-align:left; border-bottom:1px solid #e0e8e0; color:var(--eco-text-muted);">Rank</th>
+                                <th style="font-size:0.7rem; padding:0.5rem; text-align:left; border-bottom:1px solid #e0e8e0; color:var(--eco-text-muted);">Classroom</th>
+                                <th style="font-size:0.7rem; padding:0.5rem; text-align:left; border-bottom:1px solid #e0e8e0; color:var(--eco-text-muted);">Points</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ranking-body">
+                            <tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--eco-text-muted);">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="honor-card glass-card-static">
+                    <h4>HONOR ROLL - TOP STUDENT OF THE MONTH</h4>
+                    <div class="honor-avatar">&#128100;</div>
+                    <div class="honor-name" id="honor-name">--</div>
+                    <div class="honor-detail" id="honor-detail">--</div>
+                    <div style="margin-top: 1rem;">
+                        <span class="badge badge-eco" id="honor-points">-- pts</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/config.js"></script>
+    <script>
+        // Session verification
+        const user = JSON.parse(sessionStorage.getItem('eco_user') || localStorage.getItem('eco_user') || '{}');
+        if (!user.usuario_id || user.rol !== 'director') {
+            window.location.href = '../index.html';
+        }
+        document.getElementById('admin-user').textContent = user.nombre || 'Admin';
+
+        let barChart = null;
+        let pieChart = null;
+
+        async function loadDashboard() {
+            try {
+                const [resDir, resAlumnos] = await Promise.all([
+                    fetch(`${CONFIG.API_BASE_URL}/api/dashboard/director`),
+                    fetch(`${CONFIG.API_BASE_URL}/api/admin/alumnos`)
+                ]);
+                const data = await resDir.json();
+                const dataAlumnos = await resAlumnos.json();
+
+                // Stats
+                document.getElementById('s-students').textContent = data.total_alumnos || 0;
+                document.getElementById('s-classrooms').textContent = (data.ranking_aulas || []).length;
+                document.getElementById('s-tutors').textContent = data.total_docentes || 0;
+                document.getElementById('s-total').textContent = data.total_registros || 0;
+
+                // Bar chart - recycling per category
+                renderBarChart(data.desglose_categorias || []);
+
+                // Pie chart - classroom distribution
+                renderPieChart(data.ranking_aulas || []);
+
+                // Ranking table
+                renderRanking(data.ranking_aulas || []);
+
+                // Honor roll - top student by points from real DB data
+                const alumnos = (dataAlumnos.alumnos || []).sort((a, b) => (b.puntos || 0) - (a.puntos || 0));
+                renderHonorRoll(alumnos);
+
+            } catch (err) {
+                console.error('Admin dashboard error:', err);
+            }
+        }
+
+        function renderBarChart(categorias) {
+            const ctx = document.getElementById('chart-bar').getContext('2d');
+            const labels = categorias.map(c => c.tipo_residuo || '--');
+            const values = categorias.map(c => c.cantidad || 0);
+
+            if (barChart) barChart.destroy();
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'kg',
+                        data: values,
+                        backgroundColor: [
+                            'rgba(46, 125, 50, 0.7)',
+                            'rgba(129, 199, 132, 0.7)',
+                            'rgba(27, 94, 32, 0.7)',
+                            'rgba(76, 175, 80, 0.7)',
+                            'rgba(165, 214, 167, 0.7)',
+                            'rgba(200, 230, 201, 0.7)',
+                        ],
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderPieChart(aulas) {
+            const ctx = document.getElementById('chart-pie').getContext('2d');
+            const labels = aulas.slice(0, 8).map(a => a.grado_seccion || '--');
+            const values = aulas.slice(0, 8).map(a => a.puntos_totales || 0);
+
+            const colors = ['#2e7d32', '#4caf50', '#81c784', '#a5d6a7', '#c8e6c9', '#1b5e20', '#388e3c', '#66bb6a'];
+
+            if (pieChart) pieChart.destroy();
+            pieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { font: { size: 10 }, boxWidth: 12 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderRanking(aulas) {
+            const body = document.getElementById('ranking-body');
+            if (aulas.length === 0) {
+                body.innerHTML = '<tr><td colspan="3" style="text-align:center;">Sin datos</td></tr>';
+                return;
+            }
+            body.innerHTML = aulas.slice(0, 10).map((a, i) => `
+                <tr>
+                    <td style="padding:0.5rem; font-size:0.85rem;">${i + 1}</td>
+                    <td style="padding:0.5rem; font-size:0.85rem;">${a.grado_seccion || '--'}</td>
+                    <td style="padding:0.5rem; font-size:0.85rem; font-weight:700;">${a.puntos_totales || 0}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderHonorRoll(alumnos) {
+            if (alumnos.length > 0) {
+                const top = alumnos[0];
+                document.getElementById('honor-name').textContent = `${top.nombre || '--'} ${top.apellido || ''}`;
+                document.getElementById('honor-detail').textContent = top.grado_seccion || '--';
+                document.getElementById('honor-points').textContent = `Eco-Points: ${top.puntos || 0} pts`;
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>

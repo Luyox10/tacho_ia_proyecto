@@ -313,10 +313,137 @@ async def clasificar_residuo(
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+    # ── Verificar logros desbloqueados ──
+    nuevo_logro = _verificar_logros(usuario_id, tipo_residuo)
+
     return {
         "tipo_residuo_detectado": tipo_residuo,
         "confianza": round(confianza, 4),
         "puntos_sumados": puntos,
+        "nuevo_logro": nuevo_logro,
+    }
+
+
+# ── 3b. LÓGICA DE LOGROS ─────────────────────
+
+LOGROS_CONFIG = [
+    {"nombre": "Eco-Guardian", "condicion": "total", "umbral": 50, "descripcion": "Reciclar 50 residuos en total"},
+    {"nombre": "Plastic King", "condicion": "plastic", "umbral": 10, "descripcion": "Reciclar 10 items de plastico"},
+    {"nombre": "Paper Saver", "condicion": "paper", "umbral": 10, "descripcion": "Reciclar 10 items de papel"},
+    {"nombre": "Glass Collector", "condicion": "glass", "umbral": 10, "descripcion": "Reciclar 10 items de vidrio"},
+    {"nombre": "Metal Master", "condicion": "metal", "umbral": 10, "descripcion": "Reciclar 10 items de metal"},
+    {"nombre": "Organic Hero", "condicion": "organic", "umbral": 10, "descripcion": "Reciclar 10 items organicos"},
+    {"nombre": "First Step", "condicion": "total", "umbral": 1, "descripcion": "Reciclar tu primer residuo"},
+    {"nombre": "Recycler Pro", "condicion": "total", "umbral": 25, "descripcion": "Reciclar 25 residuos en total"},
+    {"nombre": "Century Club", "condicion": "total", "umbral": 100, "descripcion": "Reciclar 100 residuos en total"},
+]
+
+
+def _verificar_logros(usuario_id: int, tipo_residuo: str) -> Optional[dict]:
+    """
+    Verifica si el alumno ha desbloqueado un nuevo logro tras su último registro.
+    Compara el conteo actual de residuos con los umbrales definidos en LOGROS_CONFIG.
+
+    Args:
+        usuario_id: ID del alumno.
+        tipo_residuo: categoría del residuo recién clasificado.
+
+    Returns:
+        dict con nombre del logro si se desbloqueó uno nuevo, None en caso contrario.
+    """
+    try:
+        # Conteo total
+        total_row = ejecutar_consulta(
+            "SELECT COUNT(*) AS cnt FROM registro_residuos WHERE usuario_id = %s",
+            (usuario_id,),
+            fetchone=True,
+        )
+        total = total_row["cnt"] if total_row else 0
+
+        # Conteo por categoría del residuo actual
+        cat_row = ejecutar_consulta(
+            "SELECT COUNT(*) AS cnt FROM registro_residuos WHERE usuario_id = %s AND tipo_residuo = %s",
+            (usuario_id, tipo_residuo),
+            fetchone=True,
+        )
+        cat_count = cat_row["cnt"] if cat_row else 0
+
+        # Logros ya obtenidos
+        logros_existentes = ejecutar_consulta(
+            "SELECT nombre_medalla FROM logros WHERE usuario_id = %s",
+            (usuario_id,),
+            fetchall=True,
+        )
+        nombres_existentes = {l["nombre_medalla"] for l in (logros_existentes or [])}
+
+        # Verificar cada logro
+        nuevo_logro = None
+        for logro in LOGROS_CONFIG:
+            if logro["nombre"] in nombres_existentes:
+                continue
+
+            cumple = False
+            if logro["condicion"] == "total" and total >= logro["umbral"]:
+                cumple = True
+            elif logro["condicion"] == tipo_residuo and cat_count >= logro["umbral"]:
+                cumple = True
+
+            if cumple:
+                ejecutar_consulta(
+                    "INSERT INTO logros (usuario_id, nombre_medalla, fecha_ganado) VALUES (%s, %s, %s)",
+                    (usuario_id, logro["nombre"], datetime.utcnow()),
+                    commit=True,
+                )
+                nuevo_logro = {"nombre": logro["nombre"], "descripcion": logro["descripcion"]}
+                break  # Solo notificar un logro por clasificación
+
+        return nuevo_logro
+
+    except RuntimeError:
+        return None
+
+
+# ── 3c. ENDPOINT LOGROS DEL ALUMNO ──────────
+
+@app.get("/api/logros/{usuario_id}")
+async def obtener_logros(usuario_id: int):
+    """
+    Devuelve todos los logros del alumno y la lista completa de logros disponibles
+    para mostrar cuáles están desbloqueados y cuáles faltan.
+
+    Path params:
+        usuario_id: ID del alumno.
+
+    Returns:
+        dict con logros_obtenidos y logros_disponibles.
+
+    Raises:
+        HTTPException 500: error de base de datos.
+    """
+    try:
+        obtenidos = ejecutar_consulta(
+            "SELECT nombre_medalla, fecha_ganado FROM logros WHERE usuario_id = %s ORDER BY fecha_ganado DESC",
+            (usuario_id,),
+            fetchall=True,
+        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    nombres_obtenidos = {l["nombre_medalla"] for l in (obtenidos or [])}
+
+    disponibles = []
+    for logro in LOGROS_CONFIG:
+        disponibles.append({
+            "nombre": logro["nombre"],
+            "descripcion": logro["descripcion"],
+            "umbral": logro["umbral"],
+            "condicion": logro["condicion"],
+            "desbloqueado": logro["nombre"] in nombres_obtenidos,
+        })
+
+    return {
+        "logros_obtenidos": _serializar_fechas(obtenidos or []),
+        "logros_disponibles": disponibles,
     }
 
 
@@ -524,6 +651,53 @@ def _serializar_fechas(registros: list[dict]) -> list[dict]:
             if isinstance(val, datetime):
                 reg[key] = val.isoformat()
     return registros
+
+
+# ── 7. ADMIN: LISTAR DOCENTES ──────────────────
+@app.get("/api/admin/docentes")
+async def listar_docentes():
+    """
+    Lista todos los docentes con su aula asignada.
+    """
+    try:
+        docentes = ejecutar_consulta(
+            "SELECT u.id, u.dni, u.nombre, u.apellido, u.correo, u.aula_id, "
+            "       a.grado_seccion "
+            "FROM usuarios u "
+            "LEFT JOIN aulas a ON a.id = u.aula_id "
+            "WHERE u.rol = 'docente' "
+            "ORDER BY u.nombre ASC",
+            fetchall=True,
+        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"docentes": docentes or []}
+
+
+# ── 8. ADMIN: LISTAR ALUMNOS ──────────────────
+@app.get("/api/admin/alumnos")
+async def listar_alumnos():
+    """
+    Lista todos los alumnos con su aula y puntos individuales.
+    """
+    try:
+        alumnos = ejecutar_consulta(
+            "SELECT u.id, u.dni, u.nombre, u.apellido, u.aula_id, "
+            "       a.grado_seccion, "
+            "       COALESCE(SUM(r.puntos_ganados), 0) AS puntos "
+            "FROM usuarios u "
+            "LEFT JOIN aulas a ON a.id = u.aula_id "
+            "LEFT JOIN registro_residuos r ON r.usuario_id = u.id "
+            "WHERE u.rol = 'alumno' "
+            "GROUP BY u.id, u.dni, u.nombre, u.apellido, u.aula_id, a.grado_seccion "
+            "ORDER BY u.nombre ASC",
+            fetchall=True,
+        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"alumnos": alumnos or []}
 
 
 # ─────────────────────────────────────────────

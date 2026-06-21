@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Estudiante - Eco-School High</title>
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .dashboard-page {
+            min-height: 100vh;
+        }
+
+        .dashboard-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .welcome-text {
+            font-size: 1.1rem;
+            color: var(--eco-text-light);
+            margin-bottom: 2rem;
+        }
+
+        .welcome-text strong {
+            color: var(--eco-primary);
+        }
+
+        /* Large metric cards */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            padding: 2rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card .metric-icon {
+            position: absolute;
+            top: 1rem;
+            right: 1.25rem;
+            font-size: 1.5rem;
+            opacity: 0.6;
+        }
+
+        .metric-card .metric-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--eco-text-muted);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .metric-card .metric-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--eco-primary);
+            line-height: 1;
+        }
+
+        .metric-card .metric-value.gold {
+            color: var(--eco-gold);
+        }
+
+        .metric-card .metric-suffix {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--eco-text-muted);
+            margin-left: 0.25rem;
+        }
+
+        /* Main grid: ranking + achievements */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-card {
+            padding: 1.5rem;
+        }
+
+        .section-header {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--eco-text);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Ranking table */
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ranking-table th {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--eco-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e8e0;
+        }
+
+        .ranking-table td {
+            font-size: 0.85rem;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid #f0f4f0;
+            color: var(--eco-text);
+        }
+
+        .ranking-table tr.highlight {
+            background: var(--eco-success-light);
+            border-radius: var(--eco-radius-sm);
+        }
+
+        .ranking-table tr.highlight td {
+            font-weight: 700;
+            color: var(--eco-primary-dark);
+        }
+
+        .rank-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #f0f4f0;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .rank-num.top {
+            background: var(--eco-primary);
+            color: #fff;
+        }
+
+        .trend-up {
+            color: var(--eco-primary);
+            font-size: 0.8rem;
+        }
+
+        /* Achievements mini grid */
+        .achievements-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .achievement-mini {
+            text-align: center;
+            padding: 1rem 0.5rem;
+            border-radius: var(--eco-radius-sm);
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid #f0f4f0;
+        }
+
+        .achievement-mini.locked {
+            opacity: 0.4;
+            filter: grayscale(0.7);
+        }
+
+        .achievement-mini-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .achievement-mini-icon.gold { background: linear-gradient(135deg, #ffd54f, #ffb300); }
+        .achievement-mini-icon.silver { background: linear-gradient(135deg, #e0e0e0, #9e9e9e); }
+        .achievement-mini-icon.bronze { background: linear-gradient(135deg, #ffcc80, #e65100); }
+        .achievement-mini-icon.eco { background: linear-gradient(135deg, #a5d6a7, #2e7d32); }
+
+        .achievement-mini-name {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--eco-text);
+        }
+
+        .view-all-link {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--eco-primary);
+        }
+
+        /* Quick actions */
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            padding: 0.75rem 1.25rem;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .metrics-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .metrics-row {
+                grid-template-columns: 1fr;
+            }
+            .metric-card .metric-value {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="eco-header">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/>
+            </svg>
+            <span>ECO-SCHOOL HIGH</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span id="header-user" style="font-size: 0.9rem;">--</span>
+            <span class="badge badge-eco" id="header-points">TOTAL ECO-POINTS: -- pts</span>
+        </div>
+    </header>
+
+    <div class="dashboard-page">
+        <div class="dashboard-content">
+            <p class="welcome-text" id="welcome-msg">Bienvenido, <strong>--</strong></p>
+
+            <!-- Metric Cards -->
+            <div class="metrics-row">
+                <div class="metric-card glass-card-static">
+                    <span class="metric-icon">&#127793;</span>
+                    <div class="metric-label">&#9679; Total Points</div>
+                    <div class="metric-value" id="m-points">--<span class="metric-suffix">pts</span></div>
+                </div>
+                <div class="metric-card glass-card-static">
+                    <span class="metric-icon">&#9851;</span>
+                    <div class="metric-label">&#9679; Recycled Items</div>
+                    <div class="metric-value" id="m-items">--</div>
+                </div>
+                <div class="metric-card glass-card-static">
+                    <span class="metric-icon">&#127942;</span>
+                    <div class="metric-label">&#9679; Achievements</div>
+                    <div class="metric-value gold" id="m-logros">--</div>
+                </div>
+            </div>
+
+            <!-- Main Grid: Ranking + Achievements -->
+            <div class="main-grid">
+                <!-- Classroom Leaderboard -->
+                <div class="section-card glass-card-static">
+                    <div class="section-header">CLASSROOM LEADERBOARD</div>
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Classroom</th>
+                                <th>Points</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ranking-body">
+                            <tr><td colspan="4" style="text-align:center; color: var(--eco-text-muted);">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Achievements -->
+                <div class="section-card glass-card-static">
+                    <div class="section-header">YOUR ACHIEVEMENTS</div>
+                    <div class="achievements-mini-grid" id="achievements-grid">
+                        <div style="grid-column: 1/-1; text-align:center; color: var(--eco-text-muted); padding: 2rem;">Cargando...</div>
+                    </div>
+                    <a href="medallas.html" class="view-all-link">Ver todos los logros &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a href="../v_tacho_simulador/tacho_simulador.html" class="btn btn-primary quick-action-btn">&#9851; Ir al Tacho</a>
+                <a href="medallas.html" class="btn btn-secondary quick-action-btn">&#127942; Mis Medallas</a>
+                <a href="ranking.html" class="btn btn-secondary quick-action-btn">&#128200; Ranking Completo</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js"></script>
+    <script>
+        const MEDAL_STYLES = {
+            "Eco-Guardian": { icon: "&#127811;", style: "eco" },
+            "Plastic King": { icon: "&#128081;", style: "silver" },
+            "Paper Saver": { icon: "&#128220;", style: "bronze" },
+            "Glass Collector": { icon: "&#129347;", style: "silver" },
+            "Metal Master": { icon: "&#9881;", style: "silver" },
+            "Organic Hero": { icon: "&#127813;", style: "eco" },
+            "First Step": { icon: "&#128065;", style: "bronze" },
+            "Recycler Pro": { icon: "&#9851;", style: "gold" },
+            "Century Club": { icon: "&#127942;", style: "gold" },
+        };
+
+        // Session verification
+        const user = JSON.parse(sessionStorage.getItem('eco_user') || localStorage.getItem('eco_user') || '{}');
+        if (!user.usuario_id) {
+            window.location.href = '../index.html';
+        }
+
+        document.getElementById('header-user').textContent = `${user.nombre || '--'} - ${user.apellido || ''}`;
+        document.getElementById('welcome-msg').innerHTML = `Bienvenido, <strong>${user.nombre || '--'}</strong>`;
+
+        async function loadDashboard() {
+            try {
+                const [dashRes, logrosRes] = await Promise.all([
+                    fetch(`${CONFIG.API_BASE_URL}/api/dashboard/alumno/${user.usuario_id}`),
+                    fetch(`${CONFIG.API_BASE_URL}/api/logros/${user.usuario_id}`)
+                ]);
+
+                const dash = await dashRes.json();
+                const logros = await logrosRes.json();
+
+                // Metrics
+                document.getElementById('m-points').innerHTML = `${dash.puntos_totales || 0}<span class="metric-suffix">pts</span>`;
+                document.getElementById('m-items').textContent = dash.total_registros || 0;
+                document.getElementById('header-points').textContent = `TOTAL ECO-POINTS: ${dash.puntos_totales || 0} pts`;
+
+                const disponibles = logros.logros_disponibles || [];
+                const desbloqueados = disponibles.filter(l => l.desbloqueado);
+                document.getElementById('m-logros').textContent = desbloqueados.length;
+
+                // Achievements mini grid
+                renderAchievements(disponibles);
+
+                // Load ranking
+                loadRanking();
+
+            } catch (err) {
+                console.error('Dashboard error:', err);
+            }
+        }
+
+        function renderAchievements(disponibles) {
+            const grid = document.getElementById('achievements-grid');
+            grid.innerHTML = disponibles.slice(0, 8).map(medal => {
+                const config = MEDAL_STYLES[medal.nombre] || { icon: "&#127942;", style: "eco" };
+                const lockedClass = medal.desbloqueado ? '' : 'locked';
+                return `
+                    <div class="achievement-mini ${lockedClass}">
+                        <div class="achievement-mini-icon ${config.style}">${config.icon}</div>
+                        <div class="achievement-mini-name">${medal.nombre}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadRanking() {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/dashboard/director`);
+                const data = await res.json();
+                const ranking = data.ranking_aulas || [];
+
+                const body = document.getElementById('ranking-body');
+                if (ranking.length === 0) {
+                    body.innerHTML = '<tr><td colspan="4" style="text-align:center;">Sin datos</td></tr>';
+                    return;
+                }
+
+                body.innerHTML = ranking.slice(0, 10).map((aula, i) => {
+                    const isMyAula = aula.id === user.aula_id;
+                    const rowClass = isMyAula ? 'highlight' : '';
+                    const rankClass = i < 3 ? 'top' : '';
+                    return `
+                        <tr class="${rowClass}">
+                            <td><span class="rank-num ${rankClass}">${i + 1}</span></td>
+                            <td>${aula.grado_seccion || '--'}</td>
+                            <td>${aula.puntos_totales || 0}</td>
+                            <td><span class="trend-up">&#8599;</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Ranking error:', err);
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>

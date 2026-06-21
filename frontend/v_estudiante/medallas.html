@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Logros - Eco-School High</title>
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .medals-page {
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .medals-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .page-title {
+            margin-bottom: 0.25rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.9rem;
+            color: var(--eco-text-muted);
+            margin-bottom: 2rem;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--eco-primary);
+            line-height: 1;
+        }
+
+        .stat-value.gold {
+            color: var(--eco-gold);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--eco-text-muted);
+            margin-top: 0.25rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Section title */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--eco-text);
+            margin-bottom: 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Medals Grid */
+        .medals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .medal-card {
+            padding: 1.5rem 1rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .medal-card.locked {
+            opacity: 0.5;
+            filter: grayscale(0.8);
+        }
+
+        .medal-card.locked .medal-icon {
+            background: #e0e0e0;
+        }
+
+        .medal-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 0.75rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            position: relative;
+        }
+
+        .medal-icon.gold {
+            background: linear-gradient(135deg, #ffd54f, #ffb300);
+            box-shadow: 0 4px 12px rgba(255, 179, 0, 0.3);
+        }
+
+        .medal-icon.silver {
+            background: linear-gradient(135deg, #e0e0e0, #9e9e9e);
+            box-shadow: 0 4px 12px rgba(158, 158, 158, 0.3);
+        }
+
+        .medal-icon.bronze {
+            background: linear-gradient(135deg, #ffcc80, #e65100);
+            box-shadow: 0 4px 12px rgba(230, 81, 0, 0.2);
+        }
+
+        .medal-icon.eco {
+            background: linear-gradient(135deg, #a5d6a7, #2e7d32);
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+        }
+
+        .medal-icon .lock-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 24px;
+            height: 24px;
+            background: #616161;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #fff;
+        }
+
+        .medal-sparkle {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            font-size: 0.9rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .medal-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--eco-text);
+            margin-bottom: 0.25rem;
+        }
+
+        .medal-desc {
+            font-size: 0.7rem;
+            color: var(--eco-text-muted);
+            line-height: 1.3;
+        }
+
+        /* Progress bar for locked medals */
+        .medal-progress {
+            margin-top: 0.5rem;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .medal-progress-bar {
+            height: 100%;
+            background: var(--eco-primary);
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+
+        /* Back nav */
+        .back-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--eco-text-muted);
+            margin-bottom: 1.5rem;
+            transition: var(--eco-transition);
+        }
+
+        .back-nav:hover {
+            color: var(--eco-primary);
+        }
+
+        /* Alert for new achievement */
+        .achievement-toast {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #ffd54f, #ffb300);
+            border-radius: var(--eco-radius);
+            box-shadow: 0 8px 24px rgba(255, 179, 0, 0.3);
+            color: #3e2723;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 9999;
+            animation: slideDown 0.4s ease;
+        }
+
+        .achievement-toast.show {
+            display: flex;
+        }
+
+        /* Loading */
+        .loading-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--eco-text-muted);
+        }
+
+        @media (max-width: 768px) {
+            .medals-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                gap: 1rem;
+            }
+
+            .medal-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .medals-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="eco-header">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/>
+            </svg>
+            <span>ECO-SCHOOL HIGH</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="badge badge-eco" id="header-points">-- pts</span>
+            <span style="font-size: 0.9rem;" id="header-name">--</span>
+        </div>
+    </header>
+
+    <div class="medals-page">
+        <div class="medals-content">
+            <!-- Back navigation -->
+            <a href="dashboard.html" class="back-nav">&larr; Volver al Dashboard</a>
+
+            <h2 class="page-title">Mis Logros</h2>
+            <p class="page-subtitle">Desbloquea medallas reciclando residuos en el Tacho Inteligente</p>
+
+            <!-- Stats -->
+            <div class="stats-bar">
+                <div class="stat-item glass-card-static">
+                    <div class="stat-value" id="stat-total">--</div>
+                    <div class="stat-label">Residuos Reciclados</div>
+                </div>
+                <div class="stat-item glass-card-static">
+                    <div class="stat-value gold" id="stat-unlocked">--</div>
+                    <div class="stat-label">Logros Obtenidos</div>
+                </div>
+                <div class="stat-item glass-card-static">
+                    <div class="stat-value" id="stat-available">--</div>
+                    <div class="stat-label">Logros Disponibles</div>
+                </div>
+                <div class="stat-item glass-card-static">
+                    <div class="stat-value" id="stat-points">--</div>
+                    <div class="stat-label">Eco-Puntos</div>
+                </div>
+            </div>
+
+            <!-- Unlocked Achievements -->
+            <div class="section-title">YOUR ACHIEVEMENTS</div>
+            <div class="medals-grid" id="unlocked-grid">
+                <div class="loading-state">Cargando logros...</div>
+            </div>
+
+            <!-- Locked Achievements -->
+            <div class="section-title">POR DESBLOQUEAR</div>
+            <div class="medals-grid" id="locked-grid">
+                <div class="loading-state">Cargando...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievement Toast -->
+    <div class="achievement-toast" id="achievement-toast">
+        <span style="font-size: 1.5rem;">&#127942;</span>
+        <span id="toast-message">Nuevo logro desbloqueado!</span>
+    </div>
+
+    <script src="../assets/js/config.js"></script>
+    <script>
+        // Medal icon/style mapping
+        const MEDAL_STYLES = {
+            "Eco-Guardian": { icon: "&#127811;", style: "eco" },
+            "Plastic King": { icon: "&#128081;", style: "silver" },
+            "Paper Saver": { icon: "&#128220;", style: "bronze" },
+            "Glass Collector": { icon: "&#129347;", style: "silver" },
+            "Metal Master": { icon: "&#9881;", style: "silver" },
+            "Organic Hero": { icon: "&#127813;", style: "eco" },
+            "First Step": { icon: "&#128065;", style: "bronze" },
+            "Recycler Pro": { icon: "&#9851;", style: "gold" },
+            "Century Club": { icon: "&#127942;", style: "gold" },
+        };
+
+        // Get user from localStorage
+        const user = JSON.parse(localStorage.getItem('eco_user') || '{}');
+
+        if (!user.usuario_id) {
+            window.location.href = '../index.html';
+        }
+
+        // Load header info
+        document.getElementById('header-name').textContent = user.nombre || '--';
+
+        // Load achievements
+        async function loadMedals() {
+            try {
+                // Get logros
+                const logrosRes = await fetch(`${CONFIG.API_BASE_URL}/api/logros/${user.usuario_id}`);
+                const logrosData = await logrosRes.json();
+
+                // Get dashboard for points/total
+                const dashRes = await fetch(`${CONFIG.API_BASE_URL}/api/dashboard/alumno/${user.usuario_id}`);
+                const dashData = await dashRes.json();
+
+                // Update stats
+                document.getElementById('stat-total').textContent = dashData.total_registros || 0;
+                document.getElementById('stat-points').textContent = dashData.puntos_totales || 0;
+                document.getElementById('header-points').textContent = `${dashData.puntos_totales || 0} pts`;
+
+                const disponibles = logrosData.logros_disponibles || [];
+                const desbloqueados = disponibles.filter(l => l.desbloqueado);
+                const bloqueados = disponibles.filter(l => !l.desbloqueado);
+
+                document.getElementById('stat-unlocked').textContent = desbloqueados.length;
+                document.getElementById('stat-available').textContent = disponibles.length;
+
+                // Render unlocked
+                renderUnlocked(desbloqueados);
+
+                // Render locked with progress
+                renderLocked(bloqueados, dashData.total_registros || 0);
+
+            } catch (err) {
+                console.error('Error loading medals:', err);
+                document.getElementById('unlocked-grid').innerHTML = '<div class="loading-state">Error al cargar logros</div>';
+                document.getElementById('locked-grid').innerHTML = '';
+            }
+        }
+
+        function renderUnlocked(medals) {
+            const grid = document.getElementById('unlocked-grid');
+            if (medals.length === 0) {
+                grid.innerHTML = '<div class="loading-state">Aun no tienes logros. Recicla para desbloquearlos!</div>';
+                return;
+            }
+
+            grid.innerHTML = medals.map(medal => {
+                const config = MEDAL_STYLES[medal.nombre] || { icon: "&#127942;", style: "eco" };
+                return `
+                    <div class="medal-card glass-card-static">
+                        <div class="medal-icon ${config.style}">
+                            ${config.icon}
+                            <span class="medal-sparkle">&#10024;</span>
+                        </div>
+                        <div class="medal-name">${medal.nombre}</div>
+                        <div class="medal-desc">${medal.descripcion}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderLocked(medals, totalRegistros) {
+            const grid = document.getElementById('locked-grid');
+            if (medals.length === 0) {
+                grid.innerHTML = '<div class="loading-state">Has desbloqueado todos los logros!</div>';
+                return;
+            }
+
+            grid.innerHTML = medals.map(medal => {
+                const config = MEDAL_STYLES[medal.nombre] || { icon: "&#127942;", style: "eco" };
+                // Calculate rough progress
+                const progress = Math.min((totalRegistros / medal.umbral) * 100, 99);
+                return `
+                    <div class="medal-card glass-card-static locked">
+                        <div class="medal-icon ${config.style}">
+                            ${config.icon}
+                            <span class="lock-badge">&#128274;</span>
+                        </div>
+                        <div class="medal-name">${medal.nombre}</div>
+                        <div class="medal-desc">${medal.descripcion}</div>
+                        <div class="medal-progress">
+                            <div class="medal-progress-bar" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Init
+        loadMedals();
+    </script>
+</body>
+</html>
