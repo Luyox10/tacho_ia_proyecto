@@ -133,9 +133,9 @@ async function sendForClassification() {
         return;
     }
 
-    // Extract base64 from canvas
+    // Extract base64 from canvas (strip the data:image/jpeg;base64, prefix)
     const base64Data = canvas.toDataURL('image/jpeg', 0.85);
-    const base64String = base64Data.split(',')[1]; // Remove "data:image/jpeg;base64," prefix
+    const base64String = base64Data.split(',')[1];
 
     if (!base64String) {
         showSimAlert('error', 'Primero capture una foto del residuo');
@@ -168,7 +168,7 @@ async function sendForClassification() {
     } catch (err) {
         spinner.classList.remove('visible');
         btnSend.style.display = 'inline-flex';
-        showSimAlert('error', 'Error de conexion al clasificar');
+        showSimAlert('error', 'Error de conexion al clasificar. Verifique que el servidor este activo.');
         console.error('Classification error:', err);
     }
 }

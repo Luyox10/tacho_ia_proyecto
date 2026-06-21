@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Aula - Eco-School High</title>
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .page-wrapper {
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--eco-primary-dark);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--eco-primary);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(46, 125, 50, 0.15);
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--eco-primary);
+            color: #fff;
+        }
+
+        /* Summary Cards */
+        .summary-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            padding: 1.25rem;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(46, 125, 50, 0.1);
+            border-radius: var(--eco-radius-md);
+            text-align: center;
+        }
+
+        .summary-card .s-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--eco-primary);
+        }
+
+        .summary-card .s-label {
+            font-size: 0.75rem;
+            color: var(--eco-text-muted);
+            margin-top: 0.2rem;
+        }
+
+        /* Detailed Table */
+        .report-card {
+            padding: 1.5rem;
+        }
+
+        .report-card h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            color: var(--eco-primary-dark);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .report-table thead {
+            background: var(--eco-primary);
+            color: #fff;
+        }
+
+        .report-table th {
+            padding: 0.75rem 0.6rem;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .report-table td {
+            padding: 0.65rem 0.6rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .report-table tbody tr:hover {
+            background: rgba(46, 125, 50, 0.04);
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .rank-badge.top { background: #ffd700; color: #5d4037; }
+        .rank-badge.normal { background: #f5f5f5; color: #757575; }
+
+        .points-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .points-bar-track {
+            width: 80px;
+            height: 6px;
+            background: #e8e8e8;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .points-bar-fill {
+            height: 100%;
+            background: var(--eco-primary);
+            border-radius: 3px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.4rem;
+        }
+
+        .status-dot.active { background: #66bb6a; }
+        .status-dot.inactive { background: #ef5350; }
+
+        @media (max-width: 600px) {
+            .summary-row { grid-template-columns: 1fr 1fr; }
+            .page-wrapper { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="page-header">
+            <h1>Reporte de Aula</h1>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="competencia_aulas.html">Competencia</a>
+                <a href="reporte_aula.html" class="active">Reporte</a>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-row">
+            <div class="summary-card">
+                <div class="s-value" id="s-aula">--</div>
+                <div class="s-label">Aula</div>
+            </div>
+            <div class="summary-card">
+                <div class="s-value" id="s-students">0</div>
+                <div class="s-label">Total Alumnos</div>
+            </div>
+            <div class="summary-card">
+                <div class="s-value" id="s-points">0</div>
+                <div class="s-label">Puntos Totales</div>
+            </div>
+            <div class="summary-card">
+                <div class="s-value" id="s-avg">0</div>
+                <div class="s-label">Promedio/Alumno</div>
+            </div>
+        </div>
+
+        <!-- Detailed Student Metrics Table -->
+        <div class="report-card glass-card-static">
+            <h3>Metricas Detalladas por Alumno</h3>
+            <div class="table-wrapper">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Alumno</th>
+                            <th>Puntos</th>
+                            <th>Progreso</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-body">
+                        <tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--eco-text-muted);">Cargando reporte...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js"></script>
+    <script>
+        // Session verification
+        const user = JSON.parse(sessionStorage.getItem('eco_user') || localStorage.getItem('eco_user') || '{}');
+        if (!user.usuario_id || user.rol !== 'docente') {
+            window.location.href = '../index.html';
+        }
+
+        async function loadReporte() {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/dashboard/docente/${user.usuario_id}`);
+                const data = await res.json();
+
+                const aula = data.aula || {};
+                const alumnos = data.alumnos || [];
+
+                // Summary cards
+                document.getElementById('s-aula').textContent = aula.grado_seccion || '--';
+                document.getElementById('s-students').textContent = alumnos.length;
+                document.getElementById('s-points').textContent = aula.puntos_totales || 0;
+
+                const totalPts = alumnos.reduce((sum, a) => sum + (a.puntos || 0), 0);
+                const avg = alumnos.length > 0 ? Math.round(totalPts / alumnos.length) : 0;
+                document.getElementById('s-avg').textContent = avg;
+
+                // Table
+                renderReport(alumnos);
+
+            } catch (err) {
+                console.error('Reporte load error:', err);
+            }
+        }
+
+        function renderReport(alumnos) {
+            const body = document.getElementById('report-body');
+
+            if (alumnos.length === 0) {
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem;">No hay alumnos en esta aula.</td></tr>';
+                return;
+            }
+
+            const maxPts = Math.max(...alumnos.map(a => a.puntos || 0), 1);
+
+            body.innerHTML = alumnos.map((a, i) => {
+                const rankClass = i < 3 ? 'top' : 'normal';
+                const pct = maxPts > 0 ? ((a.puntos || 0) / maxPts * 100) : 0;
+                const isActive = (a.puntos || 0) > 0;
+                return `
+                    <tr>
+                        <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
+                        <td><strong>${a.nombre || '--'} ${a.apellido || ''}</strong></td>
+                        <td><strong>${a.puntos || 0}</strong> pts</td>
+                        <td>
+                            <div class="points-bar">
+                                <div class="points-bar-track">
+                                    <div class="points-bar-fill" style="width: ${pct}%;"></div>
+                                </div>
+                                <span style="font-size:0.75rem; color:var(--eco-text-muted);">${Math.round(pct)}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-dot ${isActive ? 'active' : 'inactive'}"></span>
+                            ${isActive ? 'Activo' : 'Sin actividad'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        loadReporte();
+    </script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competencia Inter-Aulas - Eco-School High</title>
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .page-wrapper {
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--eco-primary-dark);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--eco-primary);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(46, 125, 50, 0.15);
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--eco-primary);
+            color: #fff;
+        }
+
+        .my-aula-banner {
+            padding: 1.25rem 1.5rem;
+            background: linear-gradient(135deg, #1b5e20, #388e3c);
+            border-radius: var(--eco-radius-md);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .my-aula-banner .aula-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .my-aula-banner .aula-stats {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .my-aula-banner .stat {
+            text-align: center;
+        }
+
+        .my-aula-banner .stat-value {
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .my-aula-banner .stat-label {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .aulas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .aula-card {
+            padding: 1.25rem;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(46, 125, 50, 0.1);
+            border-radius: var(--eco-radius-md);
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .aula-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 125, 50, 0.1);
+        }
+
+        .aula-card.highlighted {
+            border-color: var(--eco-primary);
+            background: rgba(46, 125, 50, 0.08);
+        }
+
+        .aula-rank-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .aula-rank-badge.top-1 { background: #ffd700; color: #5d4037; }
+        .aula-rank-badge.top-2 { background: #bdbdbd; color: #424242; }
+        .aula-rank-badge.top-3 { background: #cd7f32; }
+        .aula-rank-badge.other { background: #78909c; }
+
+        .aula-card-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--eco-primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .aula-card-points {
+            font-size: 0.9rem;
+            color: var(--eco-text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .aula-progress {
+            width: 100%;
+            height: 6px;
+            background: #e8e8e8;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .aula-progress-fill {
+            height: 100%;
+            background: var(--eco-primary);
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        @media (max-width: 600px) {
+            .aulas-grid { grid-template-columns: 1fr 1fr; }
+            .page-wrapper { padding: 1rem; }
+            .my-aula-banner { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="page-header">
+            <h1>Competencia Inter-Aulas</h1>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="competencia_aulas.html" class="active">Competencia</a>
+                <a href="reporte_aula.html">Reporte</a>
+            </div>
+        </div>
+
+        <!-- My Aula Banner -->
+        <div class="my-aula-banner" id="my-aula-banner">
+            <div>
+                <div class="aula-name" id="my-aula-name">Cargando...</div>
+                <div style="font-size: 0.8rem; opacity:0.8;">Tu aula asignada</div>
+            </div>
+            <div class="aula-stats">
+                <div class="stat">
+                    <div class="stat-value" id="my-aula-pos">--</div>
+                    <div class="stat-label">Posicion</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="my-aula-pts">0</div>
+                    <div class="stat-label">Puntos</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="my-aula-students">0</div>
+                    <div class="stat-label">Alumnos</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Aulas Grid -->
+        <div class="aulas-grid" id="aulas-grid">
+            <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--eco-text-muted);">Cargando aulas...</div>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js"></script>
+    <script>
+        // Session verification
+        const user = JSON.parse(sessionStorage.getItem('eco_user') || localStorage.getItem('eco_user') || '{}');
+        if (!user.usuario_id || user.rol !== 'docente') {
+            window.location.href = '../index.html';
+        }
+
+        async function loadCompetencia() {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/dashboard/docente/${user.usuario_id}`);
+                const data = await res.json();
+
+                const aula = data.aula || {};
+                const posicion = data.posicion_ranking || '--';
+                const totalAlumnos = (data.alumnos || []).length;
+
+                // My aula banner
+                document.getElementById('my-aula-name').textContent = aula.grado_seccion || '--';
+                document.getElementById('my-aula-pos').textContent = `#${posicion}`;
+                document.getElementById('my-aula-pts').textContent = aula.puntos_totales || 0;
+                document.getElementById('my-aula-students').textContent = totalAlumnos;
+
+                // Fetch all aulas ranking
+                const resDir = await fetch(`${CONFIG.API_BASE_URL}/api/dashboard/director`);
+                const dirData = await resDir.json();
+                const allAulas = dirData.ranking_aulas || [];
+
+                renderAulasGrid(allAulas, aula.id);
+
+            } catch (err) {
+                console.error('Competencia load error:', err);
+            }
+        }
+
+        function renderAulasGrid(aulas, myAulaId) {
+            const grid = document.getElementById('aulas-grid');
+            const maxPts = Math.max(...aulas.map(a => a.puntos_totales || 0), 1);
+
+            grid.innerHTML = aulas.map((a, i) => {
+                const isHighlighted = a.id === myAulaId ? 'highlighted' : '';
+                const badgeClass = i === 0 ? 'top-1' : i === 1 ? 'top-2' : i === 2 ? 'top-3' : 'other';
+                const pct = maxPts > 0 ? ((a.puntos_totales || 0) / maxPts * 100) : 0;
+                return `
+                    <div class="aula-card ${isHighlighted}">
+                        <span class="aula-rank-badge ${badgeClass}">${i + 1}</span>
+                        <div class="aula-card-name">${a.grado_seccion}</div>
+                        <div class="aula-card-points">${a.puntos_totales || 0} puntos</div>
+                        <div class="aula-progress">
+                            <div class="aula-progress-fill" style="width: ${pct}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        loadCompetencia();
+    </script>
+</body>
+</html>

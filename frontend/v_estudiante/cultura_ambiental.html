@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cultura Ambiental - Eco-School High</title>
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .page-wrapper {
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .page-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .page-nav h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--eco-primary-dark);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--eco-primary);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(46, 125, 50, 0.15);
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--eco-primary);
+            color: #fff;
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .tip-card {
+            padding: 1.5rem;
+            border-radius: var(--eco-radius-md);
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(46, 125, 50, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .tip-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(46, 125, 50, 0.12);
+        }
+
+        .tip-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--eco-success-light);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tip-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+            color: var(--eco-primary-dark);
+        }
+
+        .tip-card p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--eco-text-muted);
+            line-height: 1.5;
+        }
+
+        .category-label {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            background: var(--eco-primary);
+            color: #fff;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .fact-banner {
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, #1b5e20, #43a047);
+            border-radius: var(--eco-radius-md);
+            color: #fff;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .fact-banner h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+        }
+
+        .fact-banner p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 600px) {
+            .tips-grid { grid-template-columns: 1fr; }
+            .page-wrapper { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="page-nav">
+            <h1>Cultura Ambiental</h1>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="medallas.html">Medallas</a>
+                <a href="ranking.html">Ranking</a>
+                <a href="cultura_ambiental.html" class="active">Tips</a>
+            </div>
+        </div>
+
+        <!-- Fact Banner -->
+        <div class="fact-banner">
+            <h2>Dato del Dia</h2>
+            <p id="daily-fact">Una botella de plastico tarda hasta 450 anos en descomponerse en la naturaleza.</p>
+        </div>
+
+        <!-- Tips Grid -->
+        <div class="tips-grid">
+            <div class="tip-card">
+                <div class="tip-icon">&#9851;</div>
+                <span class="category-label">Plastico</span>
+                <h3>Reduce el uso de plasticos</h3>
+                <p>Lleva tu propia botella reutilizable al colegio. Evita comprar bebidas en envases descartables cada dia.</p>
+            </div>
+
+            <div class="tip-card">
+                <div class="tip-icon">&#128220;</div>
+                <span class="category-label">Papel</span>
+                <h3>Reutiliza hojas de papel</h3>
+                <p>Usa ambos lados de cada hoja antes de reciclarla. Un arbol produce aproximadamente 8,000 hojas de papel.</p>
+            </div>
+
+            <div class="tip-card">
+                <div class="tip-icon">&#127830;</div>
+                <span class="category-label">Organico</span>
+                <h3>Compostar restos de alimentos</h3>
+                <p>Los restos de frutas y verduras pueden convertirse en abono natural para el jardin del colegio.</p>
+            </div>
+
+            <div class="tip-card">
+                <div class="tip-icon">&#129717;</div>
+                <span class="category-label">Vidrio</span>
+                <h3>El vidrio es 100% reciclable</h3>
+                <p>Una botella de vidrio puede reciclarse infinitas veces sin perder calidad ni pureza.</p>
+            </div>
+
+            <div class="tip-card">
+                <div class="tip-icon">&#9879;</div>
+                <span class="category-label">Metal</span>
+                <h3>Recicla las latas de aluminio</h3>
+                <p>Reciclar una lata de aluminio ahorra suficiente energia para encender un televisor durante 3 horas.</p>
+            </div>
+
+            <div class="tip-card">
+                <div class="tip-icon">&#127758;</div>
+                <span class="category-label">General</span>
+                <h3>Las 3R: Reducir, Reutilizar, Reciclar</h3>
+                <p>Antes de tirar algo, piensa: se puede reparar? Se puede usar para otra cosa? Y si no, reciclalo correctamente.</p>
+            </div>
+
+            <div class="tip-card">
+                <div class="tip-icon">&#128161;</div>
+                <span class="category-label">Energia</span>
+                <h3>Apaga lo que no uses</h3>
+                <p>Apaga las luces y desconecta cargadores cuando no los uses. Cada watt cuenta para el planeta.</p>
+            </div>
+
+            <div class="tip-card">
+                <div class="tip-icon">&#128167;</div>
+                <span class="category-label">Agua</span>
+                <h3>Cuida el agua</h3>
+                <p>Cierra el cano mientras te cepillas los dientes. En 2 minutos puedes ahorrar hasta 12 litros de agua.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js"></script>
+    <script>
+        // Session verification
+        const user = JSON.parse(sessionStorage.getItem('eco_user') || localStorage.getItem('eco_user') || '{}');
+        if (!user.usuario_id) {
+            window.location.href = '../index.html';
+        }
+
+        // Rotate daily fact
+        const facts = [
+            'Una botella de plastico tarda hasta 450 anos en descomponerse en la naturaleza.',
+            'Cada tonelada de papel reciclado salva 17 arboles y 26,000 litros de agua.',
+            'El 91% del plastico producido NO se recicla. Tu puedes cambiar eso.',
+            'Un chicle tirado al suelo tarda 5 anos en degradarse.',
+            'Reciclar 1 lata de aluminio ahorra energia para alimentar un TV por 3 horas.',
+            'Los oceanos contienen mas de 5 billones de piezas de plastico flotando.',
+            'El vidrio tarda 4,000 anos en descomponerse pero se recicla infinitamente.',
+            'Cada persona genera en promedio 1.2 kg de basura al dia.'
+        ];
+        const today = new Date().getDay();
+        document.getElementById('daily-fact').textContent = facts[today % facts.length];
+    </script>
+</body>
+</html>

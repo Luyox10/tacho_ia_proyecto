@@ -264,9 +264,18 @@ async def clasificar_residuo(
     # ── Obtener bytes de la imagen ──
     if imagen_base64:
         try:
-            imagen_bytes = base64.b64decode(imagen_base64)
-        except Exception:
-            raise HTTPException(status_code=400, detail="El base64 de la imagen es inválido.")
+            # Strip data URI prefix if present (e.g. "data:image/jpeg;base64,...")
+            b64_clean = imagen_base64
+            if "," in b64_clean:
+                b64_clean = b64_clean.split(",", 1)[1]
+            # Strip whitespace/newlines that can corrupt decoding
+            b64_clean = b64_clean.strip()
+            imagen_bytes = base64.b64decode(b64_clean)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"El base64 de la imagen es inválido: {e}",
+            )
     elif imagen_archivo:
         imagen_bytes = await imagen_archivo.read()
     else:
@@ -283,18 +292,29 @@ async def clasificar_residuo(
             fetchone=True,
         )
     except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al consultar alumno en BD: {e}",
+        )
 
     if not alumno:
         raise HTTPException(status_code=404, detail="Alumno no encontrado.")
 
-    # ── Clasificar ──
-    modelo = cargar_modelo()
-    tensor = preprocesar_imagen(imagen_bytes)
-    prediccion = modelo.predict(tensor, verbose=0)
-    indice = int(np.argmax(prediccion[0]))
-    tipo_residuo = CATEGORIAS[indice]
-    confianza = float(prediccion[0][indice])
+    # ── Clasificar con modelo IA ──
+    try:
+        modelo = cargar_modelo()
+        tensor = preprocesar_imagen(imagen_bytes)
+        prediccion = modelo.predict(tensor, verbose=0)
+        indice = int(np.argmax(prediccion[0]))
+        tipo_residuo = CATEGORIAS[indice]
+        confianza = float(prediccion[0][indice])
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error durante la inferencia del modelo IA: {e}",
+        )
 
     # ── Registrar en BD ──
     puntos = 10
@@ -311,7 +331,10 @@ async def clasificar_residuo(
             commit=True,
         )
     except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Clasificación exitosa ({tipo_residuo}) pero error al guardar en BD: {e}",
+        )
 
     # ── Verificar logros desbloqueados ──
     nuevo_logro = _verificar_logros(usuario_id, tipo_residuo)
@@ -698,6 +721,30 @@ async def listar_alumnos():
         raise HTTPException(status_code=500, detail=str(e))
 
     return {"alumnos": alumnos or []}
+
+
+# ── 9. ADMIN: AUDITORIA DOCENTE ──────────────────
+@app.get("/api/admin/auditoria")
+async def listar_auditoria():
+    """
+    Lista el registro de acciones de docentes (últimas 50 entradas).
+    Si la tabla no existe aún, devuelve lista vacía.
+    """
+    try:
+        registros = ejecutar_consulta(
+            "SELECT ad.id, ad.accion, ad.detalle, ad.fecha, "
+            "       u.nombre, u.apellido, a.grado_seccion "
+            "FROM auditoria_docente ad "
+            "JOIN usuarios u ON u.id = ad.docente_id "
+            "LEFT JOIN aulas a ON a.id = u.aula_id "
+            "ORDER BY ad.fecha DESC LIMIT 50",
+            fetchall=True,
+        )
+    except RuntimeError:
+        # Table might not exist yet
+        registros = []
+
+    return {"auditoria": _serializar_fechas(registros or [])}
 
 
 # ─────────────────────────────────────────────

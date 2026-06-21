@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria Docente - Eco-School High</title>
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, #1b5e20 0%, #2e7d32 100%);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-logo svg {
+            width: 28px;
+            height: 28px;
+            fill: #fff;
+        }
+
+        .sidebar-logo span {
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.65rem 0.75rem;
+            color: rgba(255, 255, 255, 0.75);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .sidebar-link:hover, .sidebar-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .sidebar-icon {
+            font-size: 1.1rem;
+        }
+
+        .admin-main {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header h2 {
+            margin: 0;
+            color: var(--eco-primary-dark);
+        }
+
+        .audit-card {
+            padding: 1.5rem;
+        }
+
+        .audit-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .audit-stat {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(46, 125, 50, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .audit-stat .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--eco-primary);
+        }
+
+        .audit-stat .stat-label {
+            font-size: 0.75rem;
+            color: var(--eco-text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .audit-table thead {
+            background: var(--eco-primary);
+            color: #fff;
+        }
+
+        .audit-table th {
+            padding: 0.75rem 0.6rem;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .audit-table td {
+            padding: 0.65rem 0.6rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .audit-table tbody tr:hover {
+            background: rgba(46, 125, 50, 0.04);
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .action-badge.login { background: #e3f2fd; color: #1565c0; }
+        .action-badge.dashboard { background: #e8f5e9; color: #2e7d32; }
+        .action-badge.export { background: #fff3e0; color: #e65100; }
+        .action-badge.edit { background: #fce4ec; color: #c62828; }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--eco-text-muted);
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .admin-layout {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 0.75rem;
+                gap: 0.25rem;
+            }
+            .sidebar-logo { display: none; }
+            .sidebar-link { white-space: nowrap; font-size: 0.75rem; padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-logo">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
+                <span>ECO-SCHOOL</span>
+            </div>
+            <a href="dashboard.html" class="sidebar-link"><span class="sidebar-icon">&#9632;</span> Global Dashboard</a>
+            <a href="gestion_alumnos.html" class="sidebar-link"><span class="sidebar-icon">&#128101;</span> Manage Students</a>
+            <a href="gestion_tutores.html" class="sidebar-link"><span class="sidebar-icon">&#128188;</span> Assign Tutors</a>
+            <a href="auditoria_docente.html" class="sidebar-link active"><span class="sidebar-icon">&#128203;</span> Teacher Audit Log</a>
+            <div style="margin-top: auto; padding-top: 2rem;">
+                <a href="#" onclick="cerrarSesion(); return false;" class="sidebar-link" style="color: #ef9a9a;"><span class="sidebar-icon">&#9211;</span> Cerrar Sesion</a>
+            </div>
+        </nav>
+
+        <!-- Main -->
+        <main class="admin-main">
+            <div class="page-header">
+                <h2>Teacher Audit Log</h2>
+                <span style="font-size: 0.8rem; color: var(--eco-text-muted);">Registro de actividades docentes</span>
+            </div>
+
+            <!-- Stats -->
+            <div class="audit-stats">
+                <div class="audit-stat">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total Actions</div>
+                </div>
+                <div class="audit-stat">
+                    <div class="stat-value" id="stat-docentes">0</div>
+                    <div class="stat-label">Active Teachers</div>
+                </div>
+                <div class="audit-stat">
+                    <div class="stat-value" id="stat-today">0</div>
+                    <div class="stat-label">Today</div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="audit-card glass-card-static">
+                <div class="table-wrapper">
+                    <table class="audit-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Docente</th>
+                                <th>Aula</th>
+                                <th>Accion</th>
+                                <th>Detalle</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-body">
+                            <tr><td colspan="6" class="empty-state"><p>Cargando...</p></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/config.js"></script>
+    <script>
+        // Session verification
+        const user = JSON.parse(sessionStorage.getItem('eco_user') || localStorage.getItem('eco_user') || '{}');
+        if (!user.usuario_id || user.rol !== 'director') {
+            window.location.href = '../index.html';
+        }
+
+        function cerrarSesion() {
+            sessionStorage.clear();
+            localStorage.removeItem('eco_user');
+            window.location.href = '../index.html';
+        }
+
+        async function loadAuditoria() {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/auditoria`);
+                const data = await res.json();
+                const registros = data.auditoria || [];
+
+                // Stats
+                document.getElementById('stat-total').textContent = registros.length;
+                const docentesUnicos = new Set(registros.map(r => `${r.nombre} ${r.apellido}`));
+                document.getElementById('stat-docentes').textContent = docentesUnicos.size;
+
+                const today = new Date().toISOString().split('T')[0];
+                const todayCount = registros.filter(r => (r.fecha || '').startsWith(today)).length;
+                document.getElementById('stat-today').textContent = todayCount;
+
+                // Table
+                renderTable(registros);
+            } catch (err) {
+                console.error('Auditoria load error:', err);
+                document.getElementById('audit-body').innerHTML =
+                    '<tr><td colspan="6" class="empty-state"><p>No se pudo cargar la auditoria. La tabla puede no existir aun.</p></td></tr>';
+            }
+        }
+
+        function renderTable(registros) {
+            const body = document.getElementById('audit-body');
+
+            if (registros.length === 0) {
+                body.innerHTML = '<tr><td colspan="6" class="empty-state"><p>No hay registros de auditoria aun. Las acciones de los docentes apareceran aqui.</p></td></tr>';
+                return;
+            }
+
+            body.innerHTML = registros.map((r, i) => {
+                const actionClass = getActionClass(r.accion);
+                const fecha = r.fecha ? new Date(r.fecha).toLocaleString('es-PE') : '--';
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${r.nombre || '--'} ${r.apellido || ''}</strong></td>
+                        <td>${r.grado_seccion || '--'}</td>
+                        <td><span class="action-badge ${actionClass}">${r.accion || '--'}</span></td>
+                        <td>${r.detalle || '--'}</td>
+                        <td style="white-space:nowrap;">${fecha}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getActionClass(accion) {
+            if (!accion) return '';
+            const lower = accion.toLowerCase();
+            if (lower.includes('login') || lower.includes('sesion')) return 'login';
+            if (lower.includes('dashboard') || lower.includes('vista')) return 'dashboard';
+            if (lower.includes('export') || lower.includes('reporte')) return 'export';
+            if (lower.includes('edit') || lower.includes('modific')) return 'edit';
+            return 'dashboard';
+        }
+
+        loadAuditoria();
+    </script>
+</body>
+</html>
