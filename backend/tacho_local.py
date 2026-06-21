@@ -44,15 +44,18 @@ PUNTOS_POR_ITEM  = 10
 # Categorías devueltas por el modelo (mismo orden del entrenamiento)
 CATEGORIAS = ["glass", "organic", "metal", "others", "plastic", "paper"]
 
-# Traducción amigable de la categoría → nombre + tacho de color
+# Traducción amigable: categoría → nombre, tacho, color BGR del recuadro
 TACHO_INFO = {
-    "glass":   {"nombre": "Vidrio",          "tacho": "Tacho Blanco  ⬜"},
-    "organic": {"nombre": "Organico",        "tacho": "Tacho Marron  🟫"},
-    "metal":   {"nombre": "Metal / Lata",    "tacho": "Tacho Amarillo 🟨"},
-    "others":  {"nombre": "Otro residuo",    "tacho": "Tacho Negro   ⬛"},
-    "plastic": {"nombre": "Plastico",        "tacho": "Tacho Azul    🟦"},
-    "paper":   {"nombre": "Papel / Carton",  "tacho": "Tacho Azul    🟦"},
+    "glass":   {"nombre": "Vidrio",          "tacho": "Tacho BLANCO",   "color": (220, 220, 220)},
+    "organic": {"nombre": "Organico",        "tacho": "Tacho MARRON",   "color": (42,  87,  130)},
+    "metal":   {"nombre": "Metal / Lata",    "tacho": "Tacho AMARILLO", "color": (0,  210, 230)},
+    "others":  {"nombre": "Otro residuo",    "tacho": "Tacho NEGRO",    "color": (60,   60,  60)},
+    "plastic": {"nombre": "Plastico",        "tacho": "Tacho AZUL",     "color": (210,  80,  20)},
+    "paper":   {"nombre": "Papel / Carton",  "tacho": "Tacho AZUL",     "color": (210,  80,  20)},
 }
+
+# Cuántos frames saltar entre cada inferencia (para mantener fluidez)
+INFERENCIA_CADA_N_FRAMES = 5
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. DESCARGA LIMPIA DEL MODELO (Hugging Face vía requests)
@@ -251,106 +254,199 @@ def obtener_ranking_aulas(limite: int = 5) -> list[dict]:
 # 4. CÁMARA — captura y detección en tiempo real
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _texto_con_fondo(
+    frame: np.ndarray,
+    texto: str,
+    origen: tuple[int, int],
+    escala: float,
+    color_texto: tuple,
+    color_fondo: tuple,
+    grosor: int = 2,
+    padding: int = 6,
+) -> None:
+    """Escribe texto con un rectángulo de fondo para máxima legibilidad."""
+    fuente = cv2.FONT_HERSHEY_SIMPLEX
+    (tw, th), baseline = cv2.getTextSize(texto, fuente, escala, grosor)
+    x, y = origen
+    cv2.rectangle(frame, (x - padding, y - th - padding), (x + tw + padding, y + baseline + padding // 2), color_fondo, -1)
+    cv2.putText(frame, texto, (x, y), fuente, escala, color_texto, grosor, cv2.LINE_AA)
+
+
 def _dibujar_resultado(frame: np.ndarray, categoria: str, confianza: float) -> np.ndarray:
     """
-    Dibuja un bounding box centrado, el nombre del residuo y la confianza sobre el frame.
-    El color del recuadro cambia según el umbral (verde = aceptado, amarillo = procesando).
+    Dibuja sobre el frame:
+      - Bounding box centrado con el color del tacho asignado.
+      - Overlay semitransparente dentro del recuadro.
+      - Etiqueta superior: nombre del residuo + confianza %.
+      - Etiqueta inferior: nombre del tacho de reciclaje.
+      - Barra de progreso de auto-captura (solo cuando supera el umbral).
     """
     h, w = frame.shape[:2]
-    # Bounding box fijo en el centro (20 % de margen)
-    x1, y1 = int(w * 0.20), int(h * 0.20)
-    x2, y2 = int(w * 0.80), int(h * 0.80)
+    x1, y1 = int(w * 0.15), int(h * 0.15)
+    x2, y2 = int(w * 0.85), int(h * 0.85)
 
     aceptado = confianza >= UMBRAL_CONFIANZA
-    color    = (0, 220, 0) if aceptado else (0, 200, 255)  # verde / amarillo
+    info     = TACHO_INFO.get(categoria, {"nombre": categoria, "tacho": "?", "color": (100, 100, 100)})
+    color    = info["color"] if aceptado else (0, 200, 255)   # color del tacho o amarillo
 
-    cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+    # ── Overlay semitransparente dentro del recuadro ──
+    overlay = frame.copy()
+    cv2.rectangle(overlay, (x1, y1), (x2, y2), color, -1)
+    cv2.addWeighted(overlay, 0.10, frame, 0.90, 0, frame)
 
-    info   = TACHO_INFO.get(categoria, {"nombre": categoria, "tacho": "?"})
-    etiq   = f"{info['nombre']}  {confianza * 100:.1f}%"
-    fuente = cv2.FONT_HERSHEY_SIMPLEX
+    # ── Bounding box ──
+    grosor_box = 3 if aceptado else 2
+    cv2.rectangle(frame, (x1, y1), (x2, y2), color, grosor_box)
+    # Esquinas decorativas
+    largo = 20
+    for px, py, dx, dy in [(x1, y1, 1, 1), (x2, y1, -1, 1), (x1, y2, 1, -1), (x2, y2, -1, -1)]:
+        cv2.line(frame, (px, py), (px + dx * largo, py), color, 4)
+        cv2.line(frame, (px, py), (px, py + dy * largo), color, 4)
 
-    # Fondo del texto para legibilidad
-    (tw, th), _ = cv2.getTextSize(etiq, fuente, 0.7, 2)
-    cv2.rectangle(frame, (x1, y1 - th - 10), (x1 + tw + 8, y1), color, -1)
-    cv2.putText(frame, etiq, (x1 + 4, y1 - 5), fuente, 0.7, (0, 0, 0), 2)
+    # ── Etiqueta superior: nombre + confianza ──
+    etiq_nombre = f"{info['nombre']}  {confianza * 100:.1f}%"
+    _texto_con_fondo(frame, etiq_nombre, (x1, y1 - 8), 0.75, (255, 255, 255), color)
 
+    # ── Etiqueta inferior: tacho asignado (solo si supera umbral) ──
     if aceptado:
-        tacho_txt = info["tacho"]
-        cv2.putText(frame, tacho_txt, (x1, y2 + 28), fuente, 0.65, color, 2)
+        etiq_tacho = f"  {info['tacho']}  "
+        _texto_con_fondo(frame, etiq_tacho, (x1, y2 + 32), 0.80, (255, 255, 255), color, grosor=2)
+
+    # ── Instrucciones en esquina inferior izquierda ──
+    cv2.putText(frame, "ESPACIO: capturar  |  ESC: cancelar",
+                (10, h - 12), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (200, 200, 200), 1, cv2.LINE_AA)
 
     return frame
 
 
+def _dibujar_barra_autocaptura(frame: np.ndarray, transcurrido: float, tiempo_total: float) -> None:
+    """Dibuja una barra de progreso de auto-captura en la parte superior del frame."""
+    h, w = frame.shape[:2]
+    pct     = min(transcurrido / tiempo_total, 1.0)
+    restante = max(0.0, tiempo_total - transcurrido)
+    barra_w  = int(w * pct)
+
+    # Fondo gris
+    cv2.rectangle(frame, (0, 0), (w, 22), (40, 40, 40), -1)
+    # Barra verde
+    cv2.rectangle(frame, (0, 0), (barra_w, 22), (0, 210, 60), -1)
+    # Texto
+    txt = f"Capturando en {restante:.1f}s..."
+    cv2.putText(frame, txt, (w // 2 - 90, 16), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1, cv2.LINE_AA)
+
+
+def _pantalla_resultado(frame: np.ndarray, categoria: str, confianza: float) -> np.ndarray:
+    """Genera un frame final con el resultado resaltado para mostrarlo 2 s tras la captura."""
+    panel = frame.copy()
+    h, w  = panel.shape[:2]
+    info  = TACHO_INFO.get(categoria, {"nombre": categoria, "tacho": "?", "color": (100, 100, 100)})
+    color = info["color"]
+
+    # Overlay oscuro
+    overlay = panel.copy()
+    cv2.rectangle(overlay, (0, 0), (w, h), (0, 0, 0), -1)
+    cv2.addWeighted(overlay, 0.45, panel, 0.55, 0, panel)
+
+    # Texto central grande
+    cy = h // 2
+    _texto_con_fondo(panel, "RESIDUO DETECTADO",  (w // 2 - 130, cy - 60), 0.9,  (255, 255, 255), color, grosor=2)
+    _texto_con_fondo(panel, info["nombre"],        (w // 2 - 130, cy - 10), 1.1,  (255, 255, 255), (30, 30, 30), grosor=3)
+    _texto_con_fondo(panel, f"{confianza*100:.1f}% confianza", (w // 2 - 80, cy + 40), 0.75, (200, 255, 200), (30, 30, 30))
+    _texto_con_fondo(panel, info["tacho"],         (w // 2 - 100, cy + 85), 0.95, (255, 255, 255), color, grosor=2)
+
+    return panel
+
+
 def capturar_residuo(modelo) -> tuple[str, float] | None:
     """
-    Abre la cámara y muestra el feed en tiempo real clasificando cada frame.
-    - Si la confianza supera UMBRAL_CONFIANZA durante 1.5 s consecutivos → captura automática.
-    - El usuario también puede presionar ESPACIO para capturar manualmente.
-    - Presionar ESC cancela.
+    Abre la cámara y muestra el feed en tiempo real clasificando residuos.
 
-    Retorna (categoria, confianza) del frame capturado, o None si se canceló.
+    Comportamiento:
+      - Clasifica cada INFERENCIA_CADA_N_FRAMES frames para mantener fluidez.
+      - Dibuja bounding box con el color del tacho asignado.
+      - Al superar UMBRAL_CONFIANZA durante TIEMPO_UMBRAL segundos → auto-captura.
+      - ESPACIO → captura manual inmediata.
+      - ESC → cancelar.
+      - Tras captura: muestra pantalla de resultado 2 s y guarda la imagen.
+
+    Retorna (categoria, confianza) o None si se canceló.
     """
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         raise RuntimeError("[Camara] No se pudo abrir la cámara web.")
 
-    print("\n[Camara] Mostrando video. Apunta al residuo.")
-    print("         ESPACIO → capturar   |   ESC → cancelar\n")
+    # Resolución recomendada para fluidez
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+    print("\n[Camara] Mostrando video. Apunta el residuo al recuadro.")
+    print("         ESPACIO → capturar manual   |   ESC → cancelar\n")
+
+    TITULO      = "Tacho Inteligente — Eco-School High"
+    TIEMPO_UMBRAL = 1.5
 
     resultado      = None
-    inicio_umbral  = None        # momento en que la confianza superó el umbral
-    TIEMPO_UMBRAL  = 1.5         # segundos consecutivos sobre el umbral para auto-captura
+    frame_actual   = None          # último frame leído (para guardar imagen)
+    categoria      = "others"
+    confianza      = 0.0
+    inicio_umbral  = None
+    n_frame        = 0             # contador de frames para sub-muestreo de inferencia
 
     while True:
         ok, frame = cap.read()
         if not ok:
             print("[Camara] Error al leer frame.")
             break
+        frame_actual = frame
+        n_frame += 1
 
-        categoria, confianza = clasificar(modelo, frame)
+        # ── Inferencia cada N frames ──
+        if n_frame % INFERENCIA_CADA_N_FRAMES == 0:
+            categoria, confianza = clasificar(modelo, frame)
+
+        # ── Dibujar visualización ──
         frame_visual = _dibujar_resultado(frame.copy(), categoria, confianza)
 
-        # ── Lógica de auto-captura por tiempo ──
+        # ── Lógica de auto-captura ──
         if confianza >= UMBRAL_CONFIANZA:
             if inicio_umbral is None:
                 inicio_umbral = time.time()
             transcurrido = time.time() - inicio_umbral
-            restante     = max(0.0, TIEMPO_UMBRAL - transcurrido)
-            barra        = int((transcurrido / TIEMPO_UMBRAL) * 20)
-            cv2.putText(
-                frame_visual,
-                f"Auto-captura en {restante:.1f}s  [{'#' * barra}{'.' * (20 - barra)}]",
-                (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 220, 0), 2,
-            )
+            _dibujar_barra_autocaptura(frame_visual, transcurrido, TIEMPO_UMBRAL)
             if transcurrido >= TIEMPO_UMBRAL:
                 resultado = (categoria, confianza)
-                print(f"[Camara] Auto-captura: {categoria} ({confianza*100:.1f}%)")
+                print(f"\n[Camara] ✅ Auto-captura: {TACHO_INFO.get(categoria, {}).get('nombre', categoria)} ({confianza*100:.1f}%)")
                 break
         else:
-            inicio_umbral = None  # reinicia el contador si cae bajo el umbral
+            inicio_umbral = None
 
-        cv2.imshow("Tacho Inteligente - ESC: cancelar | ESPACIO: capturar", frame_visual)
+        cv2.imshow(TITULO, frame_visual)
 
         tecla = cv2.waitKey(1) & 0xFF
-        if tecla == 27:          # ESC → cancelar
-            print("[Camara] Captura cancelada por el usuario.")
+        if tecla == 27:   # ESC
+            print("[Camara] Captura cancelada.")
             break
-        if tecla == 32:          # ESPACIO → captura manual
+        if tecla == 32:   # ESPACIO
             resultado = (categoria, confianza)
-            print(f"[Camara] Captura manual: {categoria} ({confianza*100:.1f}%)")
+            print(f"\n[Camara] ✅ Captura manual: {TACHO_INFO.get(categoria, {}).get('nombre', categoria)} ({confianza*100:.1f}%)")
             break
+
+    # ── Mostrar pantalla de resultado 2 s ──
+    if resultado is not None and frame_actual is not None:
+        panel = _pantalla_resultado(frame_actual.copy(), resultado[0], resultado[1])
+        cv2.imshow(TITULO, panel)
+        cv2.waitKey(2000)
 
     cap.release()
     cv2.destroyAllWindows()
 
-    # Guarda el último frame como imagen si hubo resultado
-    if resultado is not None:
+    # ── Guardar imagen capturada ──
+    if resultado is not None and frame_actual is not None:
         CAPTURAS_DIR.mkdir(parents=True, exist_ok=True)
         ts       = datetime.now().strftime("%Y%m%d_%H%M%S")
         ruta_img = CAPTURAS_DIR / f"{ts}_{resultado[0]}.jpg"
-        cv2.imwrite(str(ruta_img), frame)
-        print(f"[Camara] Imagen guardada en '{ruta_img}'")
+        cv2.imwrite(str(ruta_img), frame_actual)
+        print(f"[Camara] Imagen guardada → '{ruta_img}'")
 
     return resultado
 

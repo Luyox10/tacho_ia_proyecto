@@ -51,6 +51,15 @@ app.add_middleware(
 CATEGORIAS = ["glass", "organic", "metal", "others", "plastic", "paper"]
 IMG_SIZE = (224, 224)
 
+TACHO_INFO = {
+    "glass":   {"nombre": "Vidrio",         "tacho": "Tacho Blanco"},
+    "organic": {"nombre": "Organico",       "tacho": "Tacho Marron"},
+    "metal":   {"nombre": "Metal / Lata",   "tacho": "Tacho Amarillo"},
+    "others":  {"nombre": "Otro residuo",   "tacho": "Tacho Negro"},
+    "plastic": {"nombre": "Plastico",       "tacho": "Tacho Azul"},
+    "paper":   {"nombre": "Papel / Carton", "tacho": "Tacho Azul"},
+}
+
 _modelo = None
 
 
@@ -358,8 +367,12 @@ async def clasificar_residuo(
     # ── Verificar logros desbloqueados ──
     nuevo_logro = _verificar_logros(usuario_id, tipo_residuo)
 
+    info = TACHO_INFO.get(tipo_residuo, {"nombre": tipo_residuo, "tacho": "Tacho Negro"})
+
     return {
         "tipo_residuo_detectado": tipo_residuo,
+        "nombre_residuo": info["nombre"],
+        "tacho_asignado": info["tacho"],
         "confianza": round(confianza, 4),
         "puntos_sumados": puntos,
         "nuevo_logro": nuevo_logro,
