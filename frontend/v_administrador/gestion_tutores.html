@@ -36,11 +36,12 @@
                     <table class="crud-table">
                         <thead>
                             <tr>
-                                <th>Tutor Name</th>
-                                <th>Email</th>
-                                <th>Assigned Classroom</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th>DNI</th>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Aula Asignada</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tutors-body">
@@ -58,29 +59,40 @@
         </main>
     </div>
 
-    <!-- Modal: Assign Tutor -->
+    <!-- Modal: Crear / Editar Docente -->
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal">
             <button class="modal-close" onclick="closeModal()">&times;</button>
-            <div class="modal-title">ASSIGN TUTOR TO CLASSROOM</div>
-            <form id="tutor-form" onsubmit="return saveTutor(event)">
+            <div class="modal-title" id="modal-title">REGISTRAR DOCENTE</div>
+            <form id="tutor-form">
+                <input type="hidden" id="edit-id" value="">
                 <div class="form-group">
-                    <label for="f-tutor-name">Tutor Name</label>
-                    <input type="text" id="f-tutor-name" class="form-input" placeholder="Full name" required>
+                    <label for="f-dni">DNI</label>
+                    <input type="text" id="f-dni" class="form-input" placeholder="DNI" required maxlength="10">
                 </div>
                 <div class="form-group">
-                    <label for="f-tutor-email">Email</label>
-                    <input type="email" id="f-tutor-email" class="form-input" placeholder="tutor@eco-school.edu" required>
+                    <label for="f-nombre">Nombre</label>
+                    <input type="text" id="f-nombre" class="form-input" placeholder="Nombre" required>
                 </div>
                 <div class="form-group">
-                    <label for="f-tutor-aula">Assign to Classroom</label>
-                    <select id="f-tutor-aula" class="form-input" required>
-                        <option value="">Select classroom...</option>
+                    <label for="f-apellido">Apellido</label>
+                    <input type="text" id="f-apellido" class="form-input" placeholder="Apellido" required>
+                </div>
+                <div class="form-group">
+                    <label for="f-aula">Aula Asignada</label>
+                    <select id="f-aula" class="form-input" required>
+                        <option value="">Seleccionar aula...</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="f-contrasena">Contrase&ntilde;a <span id="pwd-hint" style="font-size:0.75rem;color:var(--eco-text-muted);font-weight:400;">(obligatoria para nuevo docente)</span></label>
+                    <input type="password" id="f-contrasena" class="form-input" placeholder="Contrase&ntilde;a" autocomplete="new-password">
+                    <small style="color:var(--eco-text-muted);font-size:0.75rem;">Dejar en blanco al editar para conservar la actual.</small>
+                </div>
+                <div id="form-error" style="display:none;padding:0.5rem 0.75rem;background:#ffebee;color:#c62828;border-radius:6px;font-size:0.82rem;margin-bottom:0.5rem;"></div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Assign Tutor</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Docente</button>
                 </div>
             </form>
         </div>
@@ -105,7 +117,6 @@
 
         async function loadData() {
             try {
-                // Fetch real docentes from DB
                 const [resDocentes, resDirector] = await Promise.all([
                     fetch(`${CONFIG.API_BASE_URL}/api/admin/docentes`),
                     fetch(`${CONFIG.API_BASE_URL}/api/dashboard/director`)
@@ -115,25 +126,22 @@
 
                 allAulas = dataDirector.ranking_aulas || [];
 
-                // Populate aula select
-                const select = document.getElementById('f-tutor-aula');
-                select.innerHTML = '<option value="">Select classroom...</option>' +
+                const select = document.getElementById('f-aula');
+                select.innerHTML = '<option value="">Seleccionar aula...</option>' +
                     allAulas.map(a => `<option value="${a.id}">${a.grado_seccion}</option>`).join('');
 
-                // Map real docentes from database
                 allTutors = (dataDocentes.docentes || []).map(d => ({
                     id: d.id,
                     dni: d.dni || '--',
-                    nombre: `${d.nombre} ${d.apellido || ''}`.trim(),
-                    email: d.correo || '--',
-                    aula: d.grado_seccion || 'Sin aula asignada',
+                    nombre: d.nombre || '--',
+                    apellido: d.apellido || '',
+                    aula: d.grado_seccion || 'Sin aula',
                     aula_id: d.aula_id,
                     assigned: !!d.aula_id
                 }));
 
                 renderTutorsTable();
                 renderClassrooms();
-
             } catch (err) {
                 console.error('Load error:', err);
             }
@@ -142,20 +150,20 @@
         function renderTutorsTable() {
             const body = document.getElementById('tutors-body');
             if (allTutors.length === 0) {
-                body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem;">No tutors found</td></tr>';
+                body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">No hay docentes registrados</td></tr>';
                 return;
             }
-
             body.innerHTML = allTutors.map(t => `
                 <tr>
+                    <td>${t.dni}</td>
                     <td><strong>${t.nombre}</strong></td>
-                    <td>${t.email}</td>
+                    <td>${t.apellido}</td>
                     <td>${t.aula}</td>
-                    <td><span class="status-badge ${t.assigned ? 'active' : 'unassigned'}">${t.assigned ? 'Active' : 'Unassigned'}</span></td>
+                    <td><span class="status-badge ${t.assigned ? 'active' : 'unassigned'}">${t.assigned ? 'Activo' : 'Sin aula'}</span></td>
                     <td>
-                        <div class="table-actions" style="display:flex; gap:0.4rem;">
-                            <button class="action-btn reassign" onclick="reassignTutor(${t.id})">Reassign</button>
-                            <button class="action-btn remove" onclick="removeTutor(${t.id})">Remove</button>
+                        <div class="table-actions" style="display:flex;gap:0.4rem;">
+                            <button class="action-btn reassign" onclick="editDocente(${t.id})">Editar</button>
+                            <button class="action-btn remove" onclick="deleteDocente(${t.id})">Eliminar</button>
                         </div>
                     </td>
                 </tr>
@@ -171,7 +179,7 @@
                         <div class="tutor-avatar">&#127979;</div>
                         <div class="tutor-info">
                             <div class="tutor-name">${a.grado_seccion}</div>
-                            <div class="tutor-aula">${tutor ? tutor.nombre : 'Sin tutor asignado'}</div>
+                            <div class="tutor-aula">${tutor ? tutor.nombre + ' ' + tutor.apellido : 'Sin docente asignado'}</div>
                             <div class="tutor-aula">Puntos: ${a.puntos_totales || 0}</div>
                         </div>
                     </div>
@@ -179,54 +187,112 @@
             }).join('');
         }
 
-        function openModal() {
+        function openModal(docente = null) {
             document.getElementById('modal-overlay').classList.add('show');
-            document.getElementById('tutor-form').reset();
+            document.getElementById('form-error').style.display = 'none';
+            const pwdInput = document.getElementById('f-contrasena');
+            const pwdHint  = document.getElementById('pwd-hint');
+            if (docente) {
+                document.getElementById('modal-title').textContent = 'EDITAR DOCENTE';
+                document.getElementById('edit-id').value = docente.id;
+                document.getElementById('f-dni').value = docente.dni;
+                document.getElementById('f-dni').readOnly = true;
+                document.getElementById('f-nombre').value = docente.nombre;
+                document.getElementById('f-apellido').value = docente.apellido;
+                document.getElementById('f-aula').value = docente.aula_id || '';
+                pwdInput.required = false;
+                pwdInput.value = '';
+                pwdHint.textContent = '(dejar en blanco para conservar la actual)';
+            } else {
+                document.getElementById('modal-title').textContent = 'REGISTRAR DOCENTE';
+                document.getElementById('tutor-form').reset();
+                document.getElementById('edit-id').value = '';
+                document.getElementById('f-dni').readOnly = false;
+                pwdInput.required = true;
+                pwdHint.textContent = '(obligatoria para nuevo docente)';
+            }
         }
 
         function closeModal() {
             document.getElementById('modal-overlay').classList.remove('show');
         }
 
-        function saveTutor(e) {
-            e.preventDefault();
-            const nombre = document.getElementById('f-tutor-name').value;
-            const email = document.getElementById('f-tutor-email').value;
-            const aulaSelect = document.getElementById('f-tutor-aula');
-            const aulaId = parseInt(aulaSelect.value);
-            const aulaText = aulaSelect.selectedOptions[0]?.text || '--';
-
-            allTutors.push({
-                id: Date.now(),
-                nombre: nombre,
-                email: email,
-                aula: aulaText,
-                aula_id: aulaId,
-                assigned: true
-            });
-
-            renderTutorsTable();
-            renderClassrooms();
-            closeModal();
-            return false;
+        function editDocente(id) {
+            const docente = allTutors.find(t => t.id === id);
+            if (docente) openModal(docente);
         }
 
-        function reassignTutor(id) {
-            const tutor = allTutors.find(t => t.id === id);
-            if (tutor) {
-                openModal();
-                document.getElementById('f-tutor-name').value = tutor.nombre;
-                document.getElementById('f-tutor-email').value = tutor.email;
-            }
-        }
-
-        function removeTutor(id) {
-            if (confirm('Remove this tutor assignment?')) {
+        async function deleteDocente(id) {
+            if (!confirm('\u00bfEliminar este docente? Esta acci\u00f3n no se puede deshacer.')) return;
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/docentes/${id}`, { method: 'DELETE' });
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert('Error: ' + (err.detail || 'No se pudo eliminar.'));
+                    return;
+                }
                 allTutors = allTutors.filter(t => t.id !== id);
                 renderTutorsTable();
                 renderClassrooms();
+            } catch (err) {
+                alert('Error de red: ' + err.message);
             }
         }
+
+        async function saveTutor(e) {
+            const editId     = document.getElementById('edit-id').value;
+            const dni        = document.getElementById('f-dni').value.trim();
+            const nombre     = document.getElementById('f-nombre').value.trim();
+            const apellido   = document.getElementById('f-apellido').value.trim();
+            const aula_id    = document.getElementById('f-aula').value;
+            const contrasena = document.getElementById('f-contrasena').value;
+            const errorBox   = document.getElementById('form-error');
+
+            errorBox.style.display = 'none';
+
+            if (!editId && !contrasena) {
+                errorBox.textContent = 'La contrase\u00f1a es obligatoria para nuevos docentes.';
+                errorBox.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('nombre', nombre);
+            formData.append('apellido', apellido);
+            formData.append('aula_id', aula_id);
+            if (contrasena) formData.append('contrasena_hash', contrasena);
+
+            try {
+                let res;
+                if (editId) {
+                    res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/docentes/${editId}`, {
+                        method: 'PUT', body: formData
+                    });
+                } else {
+                    formData.append('dni', dni);
+                    res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/docentes`, {
+                        method: 'POST', body: formData
+                    });
+                }
+                if (!res.ok) {
+                    const err = await res.json();
+                    errorBox.textContent = 'Error: ' + (err.detail || 'No se pudo guardar.');
+                    errorBox.style.display = 'block';
+                    return;
+                }
+                await loadData();
+                closeModal();
+            } catch (err) {
+                errorBox.textContent = 'Error de red: ' + err.message;
+                errorBox.style.display = 'block';
+            }
+        }
+
+        // Submit con addEventListener (evita el bug de async con onsubmit inline)
+        document.getElementById('tutor-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveTutor(e);
+        });
 
         // Close modal on overlay click
         document.getElementById('modal-overlay').addEventListener('click', (e) => {

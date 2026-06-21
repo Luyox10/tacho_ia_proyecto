@@ -13,6 +13,7 @@ Endpoints:
 """
 
 import base64
+import hashlib
 import io
 import os
 import requests
@@ -25,6 +26,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 
 from base_datos import ejecutar_consulta
+
+
+def _hashear(contrasena: str) -> str:
+    """Devuelve el SHA-256 hex de la contraseña en texto plano."""
+    return hashlib.sha256(contrasena.encode("utf-8")).hexdigest()
 
 # ─────────────────────────────────────────────
 # Configuración de la app
@@ -208,7 +214,7 @@ async def login(dni: Optional[str] = Form(None), correo: Optional[str] = Form(No
     if not usuario:
         raise HTTPException(status_code=401, detail="Usuario no encontrado.")
 
-    if usuario["contrasena_hash"] != contrasena:
+    if usuario["contrasena_hash"] != _hashear(contrasena):
         raise HTTPException(status_code=401, detail="Contraseña incorrecta.")
 
     return {
@@ -789,7 +795,7 @@ async def crear_alumno(
         nuevo_id = ejecutar_consulta(
             "INSERT INTO usuarios (dni, nombre, apellido, contrasena_hash, rol, aula_id, fecha_creacion) "
             "VALUES (%s, %s, %s, %s, 'alumno', %s, %s)",
-            (dni, nombre, apellido, contrasena_hash, aula_id, datetime.utcnow()),
+            (dni, nombre, apellido, _hashear(contrasena_hash), aula_id, datetime.utcnow()),
             commit=True,
         )
     except HTTPException:
@@ -843,7 +849,7 @@ async def editar_alumno(
             ejecutar_consulta(
                 "UPDATE usuarios SET nombre = %s, apellido = %s, aula_id = %s, contrasena_hash = %s "
                 "WHERE id = %s AND rol = 'alumno'",
-                (nombre, apellido, aula_id, contrasena_hash, alumno_id),
+                (nombre, apellido, aula_id, _hashear(contrasena_hash), alumno_id),
                 commit=True,
             )
         else:
@@ -894,7 +900,138 @@ async def eliminar_alumno(alumno_id: int):
     return {"eliminado": True, "id": alumno_id}
 
 
-# ── 12. ADMIN: AUDITORIA DOCENTE ──────────────────
+# ── 12. ADMIN: CREAR DOCENTE ────────────────────────
+@app.post("/api/admin/docentes")
+async def crear_docente(
+    dni: str = Form(...),
+    nombre: str = Form(...),
+    apellido: str = Form(...),
+    contrasena_hash: str = Form(...),
+    aula_id: int = Form(...),
+):
+    """
+    Registra un nuevo docente en `usuarios` con rol='docente'.
+    La contraseña se almacena como SHA-256 del texto plano recibido.
+
+    Form fields:
+        dni, nombre, apellido, contrasena_hash (texto plano), aula_id.
+
+    Raises:
+        HTTPException 409: DNI ya registrado.
+        HTTPException 500: error de base de datos.
+    """
+    try:
+        existente = ejecutar_consulta(
+            "SELECT id FROM usuarios WHERE dni = %s",
+            (dni,),
+            fetchone=True,
+        )
+        if existente:
+            raise HTTPException(status_code=409, detail=f"El DNI {dni} ya está registrado.")
+
+        nuevo_id = ejecutar_consulta(
+            "INSERT INTO usuarios (dni, nombre, apellido, contrasena_hash, rol, aula_id, fecha_creacion) "
+            "VALUES (%s, %s, %s, %s, 'docente', %s, %s)",
+            (dni, nombre, apellido, _hashear(contrasena_hash), aula_id, datetime.utcnow()),
+            commit=True,
+        )
+    except HTTPException:
+        raise
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {
+        "id": nuevo_id,
+        "dni": dni,
+        "nombre": nombre,
+        "apellido": apellido,
+        "rol": "docente",
+        "aula_id": aula_id,
+    }
+
+
+# ── 13. ADMIN: EDITAR DOCENTE ────────────────────────
+@app.put("/api/admin/docentes/{docente_id}")
+async def editar_docente(
+    docente_id: int,
+    nombre: str = Form(...),
+    apellido: str = Form(...),
+    aula_id: int = Form(...),
+    contrasena_hash: Optional[str] = Form(None),
+):
+    """
+    Actualiza nombre, apellido y aula del docente.
+    Si se envía contrasena_hash, la actualiza (SHA-256). Si no, la mantiene.
+
+    Raises:
+        HTTPException 404: docente no encontrado.
+        HTTPException 500: error de base de datos.
+    """
+    try:
+        docente = ejecutar_consulta(
+            "SELECT id FROM usuarios WHERE id = %s AND rol = 'docente'",
+            (docente_id,),
+            fetchone=True,
+        )
+        if not docente:
+            raise HTTPException(status_code=404, detail="Docente no encontrado.")
+
+        if contrasena_hash:
+            ejecutar_consulta(
+                "UPDATE usuarios SET nombre = %s, apellido = %s, aula_id = %s, contrasena_hash = %s "
+                "WHERE id = %s AND rol = 'docente'",
+                (nombre, apellido, aula_id, _hashear(contrasena_hash), docente_id),
+                commit=True,
+            )
+        else:
+            ejecutar_consulta(
+                "UPDATE usuarios SET nombre = %s, apellido = %s, aula_id = %s "
+                "WHERE id = %s AND rol = 'docente'",
+                (nombre, apellido, aula_id, docente_id),
+                commit=True,
+            )
+    except HTTPException:
+        raise
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"id": docente_id, "nombre": nombre, "apellido": apellido, "aula_id": aula_id}
+
+
+# ── 14. ADMIN: ELIMINAR DOCENTE ──────────────────────
+@app.delete("/api/admin/docentes/{docente_id}")
+async def eliminar_docente(docente_id: int):
+    """
+    Elimina un docente de `usuarios`.
+    No elimina los alumnos de su aula; solo desvincula el rol docente.
+
+    Raises:
+        HTTPException 404: docente no encontrado.
+        HTTPException 500: error de base de datos.
+    """
+    try:
+        docente = ejecutar_consulta(
+            "SELECT id FROM usuarios WHERE id = %s AND rol = 'docente'",
+            (docente_id,),
+            fetchone=True,
+        )
+        if not docente:
+            raise HTTPException(status_code=404, detail="Docente no encontrado.")
+
+        ejecutar_consulta(
+            "DELETE FROM usuarios WHERE id = %s AND rol = 'docente'",
+            (docente_id,),
+            commit=True,
+        )
+    except HTTPException:
+        raise
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"eliminado": True, "id": docente_id}
+
+
+# ── 15. ADMIN: AUDITORIA DOCENTE ──────────────────
 @app.get("/api/admin/auditoria")
 async def listar_auditoria():
     """
