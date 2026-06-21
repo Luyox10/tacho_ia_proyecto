@@ -4,7 +4,7 @@ tacho_local.py
 Script standalone para el Tacho Inteligente físico.
 
 Flujo:
-  1. Descarga el modelo de Google Drive (con gdown, maneja la advertencia de archivos grandes).
+  1. Descarga el modelo desde Hugging Face con requests (streaming, sin dependencias externas).
   2. Carga el modelo Keras en memoria.
   3. Identifica al alumno por DNI consultando TiDB.
   4. Abre la cámara web con OpenCV.
@@ -14,7 +14,7 @@ Flujo:
   8. Al finalizar, suma 10 puntos por residuo registrado en TiDB y muestra el ranking.
 
 Dependencias:
-  pip install opencv-python tensorflow gdown pymysql cryptography pillow numpy
+  pip install opencv-python tensorflow requests pymysql cryptography pillow numpy
 """
 
 import os
@@ -23,8 +23,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import requests
 import cv2
-import gdown
 import numpy as np
 import pymysql
 import pymysql.cursors
@@ -34,8 +34,8 @@ from PIL import Image
 # CONFIGURACIÓN GLOBAL
 # ─────────────────────────────────────────────────────────────────────────────
 
-DRIVE_FILE_ID    = "1br48ms-wZiWBcbBR9LvP-QogoGz7_OOv"
-RUTA_MODELO      = Path(__file__).parent / "modelo_ia.h5"
+HF_MODEL_URL     = "https://huggingface.co/JuliEt10/tacho-ia-modelo/resolve/main/modelo_residuos.h5?download=true"
+RUTA_MODELO      = Path(__file__).parent / "modelo_residuos.h5"
 CAPTURAS_DIR     = Path(__file__).parent / "capturas"
 IMG_SIZE         = (224, 224)
 UMBRAL_CONFIANZA = 0.70          # 70 % mínimo para aceptar la clasificación
@@ -55,7 +55,7 @@ TACHO_INFO = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1. DESCARGA SEGURA DEL MODELO (gdown supera la advertencia de Drive)
+# 1. DESCARGA LIMPIA DEL MODELO (Hugging Face vía requests)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _verificar_modelo(ruta: Path) -> bool:
@@ -65,24 +65,45 @@ def _verificar_modelo(ruta: Path) -> bool:
 
 def descargar_modelo(ruta: Path = RUTA_MODELO) -> None:
     """
-    Descarga el modelo desde Google Drive con gdown.
-    - Usa fuzzy=True para manejar automáticamente la cookie de confirmación.
+    Descarga el modelo desde Hugging Face usando requests en modo streaming.
     - Omite la descarga si el archivo ya existe y no está corrupto.
+    - Muestra el tamaño en MB del archivo para validar que no esté vacío.
+    - Escribe en bloques de 8 KB para no saturar la memoria.
     """
     if _verificar_modelo(ruta):
-        print(f"[Modelo] Archivo encontrado en '{ruta}'. Omitiendo descarga.")
+        size_mb = ruta.stat().st_size / 1_048_576
+        print(f"[Modelo] Archivo '{ruta.name}' ya existe ({size_mb:.2f} MB). Omitiendo descarga.")
         return
 
-    print("[Modelo] Descargando modelo desde Google Drive...")
-    url = f"https://drive.google.com/uc?id={DRIVE_FILE_ID}"
+    print(f"[Modelo] Descargando modelo desde Hugging Face...")
+    print(f"         URL: {HF_MODEL_URL}")
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+
     try:
-        gdown.download(url, str(ruta), quiet=False, fuzzy=True)
-    except Exception as exc:
+        with requests.get(HF_MODEL_URL, stream=True, timeout=120) as resp:
+            resp.raise_for_status()
+            total = int(resp.headers.get('content-length', 0))
+            descargado = 0
+            with open(ruta, 'wb') as f:
+                for chunk in resp.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        descargado += len(chunk)
+                        if total:
+                            pct = descargado / total * 100
+                            print(f"\r         Progreso: {pct:.1f}%  ({descargado/1_048_576:.1f} MB)", end='', flush=True)
+        print()  # salto de línea tras el progreso
+    except requests.RequestException as exc:
+        if ruta.exists():
+            ruta.unlink()  # eliminar archivo incompleto
         raise RuntimeError(f"[Modelo] Error al descargar: {exc}") from exc
 
     if not _verificar_modelo(ruta):
+        ruta.unlink()
         raise RuntimeError("[Modelo] El archivo descargado parece corrupto (tamaño insuficiente).")
-    print("[Modelo] Descarga completada.")
+
+    size_mb = ruta.stat().st_size / 1_048_576
+    print(f"[Modelo] Descarga completada. Tamaño: {size_mb:.2f} MB")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

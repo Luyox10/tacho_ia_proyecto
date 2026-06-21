@@ -54,25 +54,40 @@ IMG_SIZE = (224, 224)
 _modelo = None
 
 
-DRIVE_MODEL_URL = "https://docs.google.com/uc?export=download&id=1br48ms-wZiWBcbBR9LvP-QogoGz7_OOv"
+HF_MODEL_URL  = "https://huggingface.co/JuliEt10/tacho-ia-modelo/resolve/main/modelo_residuos.h5?download=true"
+NOMBRE_MODELO = "modelo_residuos.h5"
 
 
 def _descargar_modelo(ruta: str) -> None:
     """
-    Descarga el modelo desde Google Drive en bloques de 8192 bytes.
+    Descarga el modelo desde Hugging Face en bloques de 8192 bytes.
+    Elimina el archivo si la descarga falla para evitar archivos corruptos.
 
     Args:
         ruta: ruta local donde guardar el archivo .h5.
     """
     os.makedirs(os.path.dirname(ruta), exist_ok=True)
-    print("Descargando modelo de IA desde Google Drive...")
-    with requests.get(DRIVE_MODEL_URL, stream=True) as resp:
-        resp.raise_for_status()
-        with open(ruta, "wb") as f:
-            for chunk in resp.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
-    print("Descarga del modelo completada.")
+    print("[Modelo] Descargando modelo desde Hugging Face...")
+    try:
+        with requests.get(HF_MODEL_URL, stream=True, timeout=120) as resp:
+            resp.raise_for_status()
+            total = int(resp.headers.get("content-length", 0))
+            descargado = 0
+            with open(ruta, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        descargado += len(chunk)
+                        if total:
+                            pct = descargado / total * 100
+                            print(f"\r         Progreso: {pct:.1f}%  ({descargado/1_048_576:.1f} MB)", end="", flush=True)
+        print()
+    except Exception as exc:
+        if os.path.exists(ruta):
+            os.remove(ruta)
+        raise RuntimeError(f"[Modelo] Error al descargar: {exc}") from exc
+    size_mb = os.path.getsize(ruta) / 1_048_576
+    print(f"[Modelo] Descarga completada. Tamaño: {size_mb:.2f} MB")
 
 
 def cargar_modelo():
@@ -80,6 +95,7 @@ def cargar_modelo():
     Carga el modelo Keras desde disco de forma lazy (singleton).
     Se invoca en la primera petición de clasificación para no bloquear
     el arranque del servidor si el archivo no existe todavía.
+    Si el archivo ya existe, muestra su tamaño en MB para validar que no esté vacío.
 
     Returns:
         tensorflow.keras.Model: modelo compilado listo para predicción.
@@ -89,8 +105,11 @@ def cargar_modelo():
     """
     global _modelo
     if _modelo is None:
-        ruta = os.path.join(os.path.dirname(__file__), "modelo_ia.h5")
-        if not os.path.isfile(ruta):
+        ruta = os.path.join(os.path.dirname(__file__), NOMBRE_MODELO)
+        if os.path.isfile(ruta):
+            size_mb = os.path.getsize(ruta) / 1_048_576
+            print(f"[Modelo] Archivo '{NOMBRE_MODELO}' encontrado ({size_mb:.2f} MB). Omitiendo descarga.")
+        else:
             _descargar_modelo(ruta)
         import tensorflow as tf
         _modelo = tf.keras.models.load_model(ruta)
