@@ -61,7 +61,7 @@
         <div class="modal">
             <button class="modal-close" onclick="closeModal()">&times;</button>
             <div class="modal-title" id="modal-title">REGISTER NEW STUDENT</div>
-            <form id="student-form" onsubmit="return saveStudent(event)">
+            <form id="student-form">
                 <input type="hidden" id="edit-id" value="">
                 <div class="form-group">
                     <label for="f-dni">DNI</label>
@@ -236,7 +236,6 @@
         }
 
         async function saveStudent(e) {
-            e.preventDefault();
             const editId     = document.getElementById('edit-id').value;
             const dni        = document.getElementById('f-dni').value.trim();
             const nombre     = document.getElementById('f-nombre').value.trim();
@@ -291,8 +290,13 @@
                 errorBox.textContent = 'Network error: ' + err.message;
                 errorBox.style.display = 'block';
             }
-            return false;
         }
+
+        // Submit del formulario (async — no usar onsubmit inline con return)
+        document.getElementById('student-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveStudent(e);
+        });
 
         // Close modal on overlay click
         document.getElementById('modal-overlay').addEventListener('click', (e) => {
