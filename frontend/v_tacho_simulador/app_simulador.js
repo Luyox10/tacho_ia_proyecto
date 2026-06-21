@@ -128,13 +128,17 @@ function retakePhoto() {
 
 // ===== STEP 2 -> 3: SEND TO BACKEND =====
 async function sendForClassification() {
-    if (!capturedBlob) {
-        showSimAlert('error', 'Primero capture una foto del residuo');
+    if (!verifiedStudent) {
+        showSimAlert('error', 'Primero verifique el DNI del estudiante');
         return;
     }
 
-    if (!verifiedStudent) {
-        showSimAlert('error', 'Primero verifique el DNI del estudiante');
+    // Extract base64 from canvas
+    const base64Data = canvas.toDataURL('image/jpeg', 0.85);
+    const base64String = base64Data.split(',')[1]; // Remove "data:image/jpeg;base64," prefix
+
+    if (!base64String) {
+        showSimAlert('error', 'Primero capture una foto del residuo');
         return;
     }
 
@@ -143,7 +147,7 @@ async function sendForClassification() {
     btnSend.style.display = 'none';
 
     const formData = new FormData();
-    formData.append('imagen_archivo', capturedBlob, 'residuo.jpg');
+    formData.append('imagen_base64', base64String);
     formData.append('usuario_id', verifiedStudent.usuario_id);
 
     try {
@@ -170,7 +174,7 @@ async function sendForClassification() {
 }
 
 // ===== STEP 3: SHOW RESULT =====
-function showResult(data) {
+async function showResult(data) {
     stopWebcam();
 
     // Hide webcam step
@@ -191,15 +195,40 @@ function showResult(data) {
 
     const category = data.tipo_residuo_detectado || '--';
     const confidence = data.confianza || 0;
+    const puntosGanados = data.puntos_sumados || 10;
 
     document.getElementById('result-category').textContent = categoryMap[category] || category;
-    document.getElementById('result-confidence').textContent = `Confianza: ${(confidence * 100).toFixed(1)}% | +${data.puntos_sumados || 10} pts`;
+    document.getElementById('result-confidence').textContent = `Confianza: ${(confidence * 100).toFixed(1)}% | +${puntosGanados} pts ganados`;
+
+    // Fetch updated total score
+    let totalScore = puntosGanados;
+    try {
+        const scoreRes = await fetch(`${CONFIG.API_BASE_URL}/api/dashboard/alumno/${verifiedStudent.usuario_id}`);
+        if (scoreRes.ok) {
+            const scoreData = await scoreRes.json();
+            totalScore = scoreData.puntos_totales || puntosGanados;
+        }
+    } catch (e) { /* silent fallback */ }
 
     const resultAlert = document.getElementById('result-alert');
     resultAlert.className = 'alert alert-success show';
-    resultAlert.querySelector('span').textContent = `Residuo "${categoryMap[category] || category}" registrado para ${verifiedStudent.nombre}`;
+    resultAlert.innerHTML = `
+        <span style="display:flex; flex-direction:column; align-items:center; gap:0.25rem;">
+            <strong>Residuo "${categoryMap[category] || category}" detectado correctamente</strong>
+            <span>Imagen procesada exitosamente para ${verifiedStudent.nombre}</span>
+            <span style="font-weight:700; font-size:1.1rem; margin-top:0.25rem;">Score total: ${totalScore} pts</span>
+        </span>
+    `;
 
-    showSimAlert('success', 'Clasificacion exitosa');
+    // Show prominent notification
+    showSimAlert('success', `+${puntosGanados} pts! Material detectado: ${categoryMap[category] || category}`);
+
+    // Show achievement notification if any
+    if (data.nuevo_logro) {
+        setTimeout(() => {
+            showSimAlert('success', `Nuevo logro desbloqueado: ${data.nuevo_logro.nombre}`);
+        }, 3000);
+    }
 }
 
 // ===== RESET =====

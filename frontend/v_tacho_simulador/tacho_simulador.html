@@ -209,15 +209,29 @@
             flex-wrap: wrap;
         }
 
-        .back-link {
-            display: inline-block;
+        .back-login-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
             margin-top: 2rem;
+            padding: 0.65rem 1.5rem;
             font-size: 0.85rem;
-            color: var(--eco-text-muted);
+            font-weight: 600;
+            color: var(--eco-primary-dark);
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(46, 125, 50, 0.2);
+            border-radius: var(--eco-radius-sm);
+            text-decoration: none;
+            transition: var(--eco-transition);
         }
 
-        .back-link:hover {
+        .back-login-btn:hover {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: var(--eco-primary);
             color: var(--eco-primary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.15);
         }
 
         /* Loading spinner */
@@ -320,7 +334,7 @@
             </div>
         </div>
 
-        <a href="../index.html" class="back-link">&larr; Volver al Login</a>
+        <a href="../index.html" class="back-login-btn">&larr; Volver al Login</a>
     </div>
 
     <script src="../assets/js/config.js"></script>

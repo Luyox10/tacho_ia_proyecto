@@ -285,6 +285,7 @@
             <select id="header-aula" class="form-input" style="width: auto; padding: 0.4rem 0.75rem; font-size: 0.8rem;">
                 <option>--</option>
             </select>
+            <button onclick="cerrarSesion()" style="padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 600; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3); border-radius: 6px; color: #fff; cursor: pointer; transition: all 0.2s;">Cerrar Sesión</button>
         </div>
     </header>
 
@@ -353,6 +354,12 @@
         }
 
         document.getElementById('header-user').textContent = `${user.nombre || '--'} - ${user.apellido || ''}`;
+
+        function cerrarSesion() {
+            sessionStorage.clear();
+            localStorage.removeItem('eco_user');
+            window.location.href = '../index.html';
+        }
 
         async function loadDashboard() {
             try {
