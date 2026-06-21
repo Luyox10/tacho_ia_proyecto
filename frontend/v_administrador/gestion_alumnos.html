@@ -81,6 +81,12 @@
                         <option value="">Select...</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="f-contrasena">Password <span id="pwd-hint" style="font-size:0.75rem;color:var(--eco-text-muted);font-weight:400;">(required for new student)</span></label>
+                    <input type="password" id="f-contrasena" class="form-input" placeholder="Set password" autocomplete="new-password">
+                    <small style="color:var(--eco-text-muted);font-size:0.75rem;">Leave blank when editing to keep existing password.</small>
+                </div>
+                <div id="form-error" style="display:none;padding:0.5rem 0.75rem;background:#ffebee;color:#c62828;border-radius:6px;font-size:0.82rem;margin-bottom:0.5rem;"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Student</button>
@@ -178,16 +184,27 @@
 
         function openModal(student = null) {
             document.getElementById('modal-overlay').classList.add('show');
+            document.getElementById('form-error').style.display = 'none';
+            const pwdInput = document.getElementById('f-contrasena');
+            const pwdHint  = document.getElementById('pwd-hint');
             if (student) {
                 document.getElementById('modal-title').textContent = 'EDIT STUDENT';
                 document.getElementById('edit-id').value = student.id;
                 document.getElementById('f-dni').value = student.dni || '';
+                document.getElementById('f-dni').readOnly = true;
                 document.getElementById('f-nombre').value = student.nombre;
                 document.getElementById('f-apellido').value = student.apellido;
+                document.getElementById('f-grado').value = student.aula_id || '';
+                pwdInput.required = false;
+                pwdInput.value = '';
+                pwdHint.textContent = '(leave blank to keep current password)';
             } else {
                 document.getElementById('modal-title').textContent = 'REGISTER NEW STUDENT';
                 document.getElementById('student-form').reset();
                 document.getElementById('edit-id').value = '';
+                document.getElementById('f-dni').readOnly = false;
+                pwdInput.required = true;
+                pwdHint.textContent = '(required for new student)';
             }
         }
 
@@ -200,33 +217,80 @@
             if (student) openModal(student);
         }
 
-        function deleteStudent(id) {
-            if (confirm('Are you sure you want to remove this student?')) {
+        async function deleteStudent(id) {
+            if (!confirm('Are you sure you want to remove this student? This will also delete their records.')) return;
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/alumnos/${id}`, {
+                    method: 'DELETE'
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert('Error: ' + (err.detail || 'Could not delete student.'));
+                    return;
+                }
                 allStudents = allStudents.filter(s => s.id !== id);
                 renderTable(allStudents);
+            } catch (err) {
+                alert('Network error: ' + err.message);
             }
         }
 
-        function saveStudent(e) {
+        async function saveStudent(e) {
             e.preventDefault();
-            const editId = document.getElementById('edit-id').value;
-            const newStudent = {
-                id: editId ? parseInt(editId) : Date.now(),
-                dni: document.getElementById('f-dni').value,
-                nombre: document.getElementById('f-nombre').value,
-                apellido: document.getElementById('f-apellido').value,
-                grado_seccion: document.getElementById('f-grado').selectedOptions[0]?.text || '--'
-            };
+            const editId     = document.getElementById('edit-id').value;
+            const dni        = document.getElementById('f-dni').value.trim();
+            const nombre     = document.getElementById('f-nombre').value.trim();
+            const apellido   = document.getElementById('f-apellido').value.trim();
+            const aula_id    = document.getElementById('f-grado').value;
+            const contrasena = document.getElementById('f-contrasena').value;
+            const errorBox   = document.getElementById('form-error');
 
-            if (editId) {
-                const idx = allStudents.findIndex(s => s.id === parseInt(editId));
-                if (idx !== -1) allStudents[idx] = newStudent;
-            } else {
-                allStudents.unshift(newStudent);
+            errorBox.style.display = 'none';
+
+            // Validar contraseña obligatoria al crear
+            if (!editId && !contrasena) {
+                errorBox.textContent = 'Password is required for new students.';
+                errorBox.style.display = 'block';
+                return false;
             }
 
-            renderTable(allStudents);
-            closeModal();
+            const formData = new FormData();
+            formData.append('nombre', nombre);
+            formData.append('apellido', apellido);
+            formData.append('aula_id', aula_id);
+            if (contrasena) formData.append('contrasena_hash', contrasena);
+
+            try {
+                let res;
+                if (editId) {
+                    // Editar alumno existente (PUT)
+                    res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/alumnos/${editId}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+                } else {
+                    // Crear nuevo alumno (POST) — siempre rol alumno
+                    formData.append('dni', dni);
+                    res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/alumnos`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    errorBox.textContent = 'Error: ' + (err.detail || 'Could not save student.');
+                    errorBox.style.display = 'block';
+                    return false;
+                }
+
+                // Recargar la tabla desde la API
+                await loadData();
+                closeModal();
+            } catch (err) {
+                errorBox.textContent = 'Network error: ' + err.message;
+                errorBox.style.display = 'block';
+            }
             return false;
         }
 

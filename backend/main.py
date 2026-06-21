@@ -723,7 +723,146 @@ async def listar_alumnos():
     return {"alumnos": alumnos or []}
 
 
-# ── 9. ADMIN: AUDITORIA DOCENTE ──────────────────
+# ── 9. ADMIN: CREAR ALUMNO ──────────────────────
+@app.post("/api/admin/alumnos")
+async def crear_alumno(
+    dni: str = Form(...),
+    nombre: str = Form(...),
+    apellido: str = Form(...),
+    contrasena_hash: str = Form(...),
+    aula_id: int = Form(...),
+):
+    """
+    Registra un nuevo alumno en la tabla `usuarios` con rol='alumno'.
+
+    Form fields:
+        dni, nombre, apellido, contrasena_hash, aula_id.
+
+    Returns:
+        dict con el id generado y los datos del alumno creado.
+
+    Raises:
+        HTTPException 409: si el DNI ya existe.
+        HTTPException 500: error de base de datos.
+    """
+    try:
+        existente = ejecutar_consulta(
+            "SELECT id FROM usuarios WHERE dni = %s",
+            (dni,),
+            fetchone=True,
+        )
+        if existente:
+            raise HTTPException(status_code=409, detail=f"El DNI {dni} ya está registrado.")
+
+        nuevo_id = ejecutar_consulta(
+            "INSERT INTO usuarios (dni, nombre, apellido, contrasena_hash, rol, aula_id, fecha_creacion) "
+            "VALUES (%s, %s, %s, %s, 'alumno', %s, %s)",
+            (dni, nombre, apellido, contrasena_hash, aula_id, datetime.utcnow()),
+            commit=True,
+        )
+    except HTTPException:
+        raise
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {
+        "id": nuevo_id,
+        "dni": dni,
+        "nombre": nombre,
+        "apellido": apellido,
+        "rol": "alumno",
+        "aula_id": aula_id,
+    }
+
+
+# ── 10. ADMIN: EDITAR ALUMNO ─────────────────────
+@app.put("/api/admin/alumnos/{alumno_id}")
+async def editar_alumno(
+    alumno_id: int,
+    nombre: str = Form(...),
+    apellido: str = Form(...),
+    aula_id: int = Form(...),
+    contrasena_hash: Optional[str] = Form(None),
+):
+    """
+    Actualiza los datos de un alumno existente.
+    Si se envía `contrasena_hash`, también actualiza la contraseña.
+
+    Path params:
+        alumno_id: ID del alumno a editar.
+
+    Returns:
+        dict confirmando los campos actualizados.
+
+    Raises:
+        HTTPException 404: alumno no encontrado.
+        HTTPException 500: error de base de datos.
+    """
+    try:
+        alumno = ejecutar_consulta(
+            "SELECT id FROM usuarios WHERE id = %s AND rol = 'alumno'",
+            (alumno_id,),
+            fetchone=True,
+        )
+        if not alumno:
+            raise HTTPException(status_code=404, detail="Alumno no encontrado.")
+
+        if contrasena_hash:
+            ejecutar_consulta(
+                "UPDATE usuarios SET nombre = %s, apellido = %s, aula_id = %s, contrasena_hash = %s "
+                "WHERE id = %s AND rol = 'alumno'",
+                (nombre, apellido, aula_id, contrasena_hash, alumno_id),
+                commit=True,
+            )
+        else:
+            ejecutar_consulta(
+                "UPDATE usuarios SET nombre = %s, apellido = %s, aula_id = %s "
+                "WHERE id = %s AND rol = 'alumno'",
+                (nombre, apellido, aula_id, alumno_id),
+                commit=True,
+            )
+    except HTTPException:
+        raise
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"id": alumno_id, "nombre": nombre, "apellido": apellido, "aula_id": aula_id}
+
+
+# ── 11. ADMIN: ELIMINAR ALUMNO ───────────────────
+@app.delete("/api/admin/alumnos/{alumno_id}")
+async def eliminar_alumno(alumno_id: int):
+    """
+    Elimina un alumno de `usuarios` junto con sus registros de residuos y logros.
+
+    Path params:
+        alumno_id: ID del alumno a eliminar.
+
+    Raises:
+        HTTPException 404: alumno no encontrado.
+        HTTPException 500: error de base de datos.
+    """
+    try:
+        alumno = ejecutar_consulta(
+            "SELECT id FROM usuarios WHERE id = %s AND rol = 'alumno'",
+            (alumno_id,),
+            fetchone=True,
+        )
+        if not alumno:
+            raise HTTPException(status_code=404, detail="Alumno no encontrado.")
+
+        ejecutar_consulta("DELETE FROM logros WHERE usuario_id = %s", (alumno_id,), commit=True)
+        ejecutar_consulta("DELETE FROM registro_residuos WHERE usuario_id = %s", (alumno_id,), commit=True)
+        ejecutar_consulta("DELETE FROM usuarios WHERE id = %s AND rol = 'alumno'", (alumno_id,), commit=True)
+    except HTTPException:
+        raise
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"eliminado": True, "id": alumno_id}
+
+
+# ── 12. ADMIN: AUDITORIA DOCENTE ──────────────────
 @app.get("/api/admin/auditoria")
 async def listar_auditoria():
     """
