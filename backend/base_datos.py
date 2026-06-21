@@ -111,11 +111,3 @@ def ejecutar_consulta(sql: str, params: tuple = None, fetchone: bool = False,
 
 from base_datos import ejecutar_consulta
 
-@app.get("/probar-db") # O @app.route("/probar-db") si es Flask
-def probar_db():
-    try:
-        # Una consulta simple que no requiere tablas para verificar la conexión
-        resultado = ejecutar_consulta("SELECT 1 AS conexion;")
-        return {"status": "Conectado a TiDB con éxito", "resultado": resultado}
-    except Exception as e:
-        return {"status": "Error de conexión", "error": str(e)}
