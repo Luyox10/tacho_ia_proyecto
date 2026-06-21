@@ -1,0 +1,164 @@
+.page-wrapper {
+    min-height: 100vh;
+    padding: 2rem 1.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--eco-primary-dark);
+}
+
+.nav-links {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.nav-links a {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--eco-primary);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(46, 125, 50, 0.15);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    background: var(--eco-primary);
+    color: #fff;
+}
+
+.my-aula-banner {
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #1b5e20, #388e3c);
+    border-radius: var(--eco-radius-md);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.my-aula-banner .aula-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.my-aula-banner .aula-stats {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.my-aula-banner .stat {
+    text-align: center;
+}
+
+.my-aula-banner .stat-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.my-aula-banner .stat-label {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.aulas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.aula-card {
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(46, 125, 50, 0.1);
+    border-radius: var(--eco-radius-md);
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.aula-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(46, 125, 50, 0.1);
+}
+
+.aula-card.highlighted {
+    border-color: var(--eco-primary);
+    background: rgba(46, 125, 50, 0.08);
+}
+
+.aula-rank-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.aula-rank-badge.top-1 { background: #ffd700; color: #5d4037; }
+.aula-rank-badge.top-2 { background: #bdbdbd; color: #424242; }
+.aula-rank-badge.top-3 { background: #cd7f32; }
+.aula-rank-badge.other { background: #78909c; }
+
+.aula-card-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--eco-primary-dark);
+    margin-bottom: 0.5rem;
+}
+
+.aula-card-points {
+    font-size: 0.9rem;
+    color: var(--eco-text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.aula-progress {
+    width: 100%;
+    height: 6px;
+    background: #e8e8e8;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.aula-progress-fill {
+    height: 100%;
+    background: var(--eco-primary);
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+
+@media (max-width: 600px) {
+    .aulas-grid { grid-template-columns: 1fr 1fr; }
+    .page-wrapper { padding: 1rem; }
+    .my-aula-banner { flex-direction: column; text-align: center; }
+}

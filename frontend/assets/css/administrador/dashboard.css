@@ -1,0 +1,196 @@
+.admin-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    background: rgba(26, 58, 42, 0.92);
+    backdrop-filter: blur(12px);
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    padding: 0 0.5rem;
+}
+
+.sidebar-logo svg {
+    width: 28px;
+    height: 28px;
+    fill: #fff;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: var(--eco-radius-sm);
+    transition: var(--eco-transition);
+    text-decoration: none;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.sidebar-link.active {
+    background: rgba(76, 175, 80, 0.2);
+    color: #81c784;
+}
+
+.sidebar-icon {
+    font-size: 1.1rem;
+}
+
+/* Main content */
+.admin-main {
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.admin-header h2 {
+    font-size: 1.5rem;
+}
+
+/* Stats row */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.stat-card .stat-value {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--eco-primary);
+    line-height: 1;
+}
+
+.stat-card .stat-label {
+    font-size: 0.75rem;
+    color: var(--eco-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+}
+
+.stat-card .stat-icon {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+}
+
+/* Charts grid */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.chart-card {
+    padding: 1.5rem;
+}
+
+.chart-card h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--eco-text);
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 280px;
+}
+
+/* Honor roll card */
+.honor-card {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.honor-card h4 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--eco-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+}
+
+.honor-avatar {
+    width: 64px;
+    height: 64px;
+    background: #e0e0e0;
+    border-radius: 50%;
+    margin: 0 auto 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.honor-name {
+    font-weight: 700;
+    color: var(--eco-text);
+    font-size: 0.9rem;
+}
+
+.honor-detail {
+    font-size: 0.8rem;
+    color: var(--eco-text-muted);
+}
+
+/* Bottom grid */
+.bottom-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .admin-layout {
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 1rem;
+    }
+    .sidebar-logo { display: none; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .bottom-grid { grid-template-columns: 1fr; }
+}
