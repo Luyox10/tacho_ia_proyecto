@@ -191,14 +191,6 @@ async def login(dni: Optional[str] = Form(None), email: Optional[str] = Form(Non
     }
 
 
-@app.get("/probar-db")
-def probar_db():
-    try:
-        # Esto le pide a TiDB que nos muestre cómo es la tabla por dentro
-        columnas = ejecutar_consulta("DESCRIBE registro_residuos;")
-        return {"status": "Estructura de la tabla", "columnas": columnas}
-    except Exception as e:
-        return {"status": "Error", "error": str(e)}
 
 # ── 2. IDENTIFICACIÓN RÁPIDA (TACHO FÍSICO) ──
 
