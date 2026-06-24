@@ -285,8 +285,32 @@ async def login(dni: Optional[str] = Form(None), correo: Optional[str] = Form(No
     if not usuario:
         raise HTTPException(status_code=401, detail="Usuario no encontrado.")
 
-    if usuario["contrasena_hash"] != _hashear(contrasena):
-        raise HTTPException(status_code=401, detail="Contraseña incorrecta.")
+    hash_bd = usuario["contrasena_hash"] or ""
+    hash_ingresado = _hashear(contrasena)
+    es_sha256 = len(hash_bd) == 64 and all(c in "0123456789abcdefABCDEF" for c in hash_bd)
+
+    if es_sha256:
+        # Comparación normal: hash SHA-256 vs hash SHA-256
+        if hash_bd != hash_ingresado:
+            raise HTTPException(status_code=401, detail="Contrasena incorrecta.")
+    else:
+        # La BD tiene texto plano: comparar directamente y migrar al vuelo
+        if hash_bd != contrasena:
+            raise HTTPException(status_code=401, detail="Contrasena incorrecta.")
+        # Migrar: reemplazar texto plano por SHA-256 correcto
+        try:
+            if dni:
+                ejecutar_consulta(
+                    "UPDATE usuarios SET contrasena_hash = %s WHERE dni = %s",
+                    (hash_ingresado, dni), commit=True,
+                )
+            else:
+                ejecutar_consulta(
+                    "UPDATE usuarios SET contrasena_hash = %s WHERE correo = %s",
+                    (hash_ingresado, correo), commit=True,
+                )
+        except RuntimeError:
+            pass  # Si la migración falla, el login igual continúa
 
     # primer_login = True cuando la contraseña ingresada es igual al DNI
     # (el director asigna el DNI como contraseña provisional al crear el usuario)
