@@ -8,3 +8,4 @@ cryptography
 requests
 opencv-python
 numpy
+huggingface_hub

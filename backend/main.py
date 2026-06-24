@@ -166,6 +166,76 @@ def preprocesar_imagen(imagen_bytes: bytes) -> np.ndarray:
 # ═════════════════════════════════════════════
 
 
+# ── 0. DEBUG: VER HASH ACTUAL Y RESETEAR CONTRASEÑA ──
+@app.get("/api/debug/usuarios")
+async def debug_usuarios():
+    """
+    Devuelve dni, nombre, rol y los primeros 16 chars del hash almacenado.
+    Solo para diagnóstico — no expone la contraseña completa.
+    """
+    try:
+        rows = ejecutar_consulta(
+            "SELECT id, dni, correo, nombre, apellido, rol, "
+            "LEFT(contrasena_hash, 16) AS hash_preview "
+            "FROM usuarios ORDER BY id",
+            fetchall=True,
+        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return {"usuarios": rows or []}
+
+
+@app.post("/api/debug/reset-password")
+async def debug_reset_password(
+    dni: Optional[str] = Form(None),
+    correo: Optional[str] = Form(None),
+    nueva_contrasena: str = Form(...),
+):
+    """
+    Resetea la contrasena_hash de un usuario usando SHA-256(nueva_contrasena).
+    Acepta dni (para alumno/docente) o correo (para director).
+    """
+    if not dni and not correo:
+        raise HTTPException(status_code=400, detail="Envia 'dni' o 'correo'.")
+
+    nuevo_hash = _hashear(nueva_contrasena)
+
+    try:
+        if dni:
+            afectados = ejecutar_consulta(
+                "UPDATE usuarios SET contrasena_hash = %s WHERE dni = %s",
+                (nuevo_hash, dni),
+                commit=True,
+            )
+            usuario = ejecutar_consulta(
+                "SELECT id, nombre, rol FROM usuarios WHERE dni = %s",
+                (dni,), fetchone=True,
+            )
+        else:
+            afectados = ejecutar_consulta(
+                "UPDATE usuarios SET contrasena_hash = %s WHERE correo = %s",
+                (nuevo_hash, correo),
+                commit=True,
+            )
+            usuario = ejecutar_consulta(
+                "SELECT id, nombre, rol FROM usuarios WHERE correo = %s",
+                (correo,), fetchone=True,
+            )
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+
+    return {
+        "ok": True,
+        "usuario_id": usuario["id"],
+        "nombre": usuario["nombre"],
+        "rol": usuario["rol"],
+        "mensaje": f"Contrasena actualizada correctamente. Ahora puedes ingresar con '{nueva_contrasena}'.",
+    }
+
+
 # ── 1. LOGIN UNIFICADO ───────────────────────
 
 @app.post("/api/login")
