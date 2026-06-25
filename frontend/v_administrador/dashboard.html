@@ -19,16 +19,16 @@
                 <span>ECO-SCHOOL</span>
             </div>
             <a href="dashboard.html" class="sidebar-link active">
-                <span class="sidebar-icon">&#9632;</span> Global Dashboard
+                <span class="sidebar-icon">&#9632;</span> Panel Global
             </a>
             <a href="gestion_alumnos.html" class="sidebar-link">
-                <span class="sidebar-icon">&#128101;</span> Manage Students
+                <span class="sidebar-icon">&#128101;</span> Gestionar Alumnos
             </a>
             <a href="gestion_tutores.html" class="sidebar-link">
-                <span class="sidebar-icon">&#128188;</span> Assign Tutors
+                <span class="sidebar-icon">&#128188;</span> Asignar Tutores
             </a>
             <a href="auditoria_docente.html" class="sidebar-link">
-                <span class="sidebar-icon">&#128203;</span> Teacher Audit Log
+                <span class="sidebar-icon">&#128203;</span> Auditoria Docente
             </a>
             <div style="margin-top: auto; padding-top: 2rem;">
                 <a href="#" onclick="cerrarSesion(); return false;" class="sidebar-link" style="color: #ef9a9a;">
@@ -40,7 +40,7 @@
         <!-- Main -->
         <main class="admin-main">
             <div class="admin-header">
-                <h2>Global Dashboard</h2>
+                <h2>Panel Global</h2>
                 <span style="font-size: 0.85rem; color: var(--eco-text-muted);" id="admin-user">Admin</span>
             </div>
 
@@ -49,35 +49,35 @@
                 <div class="stat-card glass-card-static">
                     <div class="stat-icon">&#128101;</div>
                     <div class="stat-value" id="s-students">--</div>
-                    <div class="stat-label">Total Students</div>
+                    <div class="stat-label">Total Alumnos</div>
                 </div>
                 <div class="stat-card glass-card-static">
                     <div class="stat-icon">&#127979;</div>
                     <div class="stat-value" id="s-classrooms">--</div>
-                    <div class="stat-label">Active Classrooms</div>
+                    <div class="stat-label">Aulas Activas</div>
                 </div>
                 <div class="stat-card glass-card-static">
                     <div class="stat-icon">&#128188;</div>
                     <div class="stat-value" id="s-tutors">--</div>
-                    <div class="stat-label">Assign Tutors</div>
+                    <div class="stat-label">Tutores Asignados</div>
                 </div>
                 <div class="stat-card glass-card-static">
                     <div class="stat-icon">&#9851;</div>
                     <div class="stat-value" id="s-total">--</div>
-                    <div class="stat-label">Total Recycled</div>
+                    <div class="stat-label">Total Reciclado</div>
                 </div>
             </div>
 
             <!-- Charts -->
             <div class="charts-grid">
                 <div class="chart-card glass-card-static">
-                    <h4>Total Recycling Volume (kg) per Category</h4>
+                    <h4>Volumen Total de Reciclaje por Categoria</h4>
                     <div class="chart-container">
                         <canvas id="chart-bar"></canvas>
                     </div>
                 </div>
                 <div class="chart-card glass-card-static">
-                    <h4>Classroom Distribution</h4>
+                    <h4>Distribucion por Aulas</h4>
                     <div class="chart-container">
                         <canvas id="chart-pie"></canvas>
                     </div>
@@ -91,9 +91,9 @@
                     <table class="students-table" style="width:100%; border-collapse:collapse;">
                         <thead>
                             <tr>
-                                <th style="font-size:0.7rem; padding:0.5rem; text-align:left; border-bottom:1px solid #e0e8e0; color:var(--eco-text-muted);">Rank</th>
-                                <th style="font-size:0.7rem; padding:0.5rem; text-align:left; border-bottom:1px solid #e0e8e0; color:var(--eco-text-muted);">Classroom</th>
-                                <th style="font-size:0.7rem; padding:0.5rem; text-align:left; border-bottom:1px solid #e0e8e0; color:var(--eco-text-muted);">Points</th>
+                                <th style="font-size:0.7rem; padding:0.5rem; text-align:left; border-bottom:1px solid #e0e8e0; color:var(--eco-text-muted);">Pos</th>
+                                <th style="font-size:0.7rem; padding:0.5rem; text-align:left; border-bottom:1px solid #e0e8e0; color:var(--eco-text-muted);">Aula</th>
+                                <th style="font-size:0.7rem; padding:0.5rem; text-align:left; border-bottom:1px solid #e0e8e0; color:var(--eco-text-muted);">Puntos</th>
                             </tr>
                         </thead>
                         <tbody id="ranking-body">
@@ -102,7 +102,7 @@
                     </table>
                 </div>
                 <div class="honor-card glass-card-static">
-                    <h4>HONOR ROLL - TOP STUDENT OF THE MONTH</h4>
+                    <h4>CUADRO DE HONOR - MEJOR ALUMNO DEL MES</h4>
                     <div class="honor-avatar">&#128100;</div>
                     <div class="honor-name" id="honor-name">--</div>
                     <div class="honor-detail" id="honor-detail">--</div>

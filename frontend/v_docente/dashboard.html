@@ -41,7 +41,7 @@
                 <!-- Aula Info -->
                 <div class="aula-info glass-card-static">
                     <div class="aula-name" id="aula-name">--</div>
-                    <p style="font-size: 0.8rem; color: var(--eco-text-muted); margin:0;">Classroom Rank: <strong id="aula-rank">--</strong></p>
+                    <p style="font-size: 0.8rem; color: var(--eco-text-muted); margin:0;">Posicion en Ranking: <strong id="aula-rank">--</strong></p>
                     <div class="aula-stats">
                         <div class="aula-stat">
                             <div class="aula-stat-value" id="aula-points">--</div>
@@ -57,17 +57,17 @@
                 <!-- Students Table -->
                 <div class="students-section glass-card-static">
                     <div class="section-header">
-                        <span class="section-title">STUDENTS ANALYTICS TABLE</span>
-                        <button class="export-btn" onclick="exportData()">&#128196; Export PDF</button>
+                        <span class="section-title">TABLA DE ALUMNOS</span>
+                        <button class="export-btn" onclick="exportData()">&#128196; Exportar PDF</button>
                     </div>
                     <div class="table-wrapper">
                         <table class="students-table">
                             <thead>
                                 <tr>
-                                    <th>Rank</th>
-                                    <th>Student Name</th>
-                                    <th>Participation</th>
-                                    <th>Points</th>
+                                    <th>Pos</th>
+                                    <th>Nombre del Alumno</th>
+                                    <th>Participacion</th>
+                                    <th>Puntos</th>
                                 </tr>
                             </thead>
                             <tbody id="students-body">
@@ -108,7 +108,7 @@
                 document.getElementById('aula-name').textContent = aula.grado_seccion || '--';
                 document.getElementById('aula-points').textContent = aula.puntos_totales || 0;
                 document.getElementById('aula-students').textContent = (data.alumnos || []).length;
-                document.getElementById('header-aula').innerHTML = `<option>${aula.grado_seccion || '--'} (My Classroom)</option>`;
+                document.getElementById('header-aula').innerHTML = `<option>${aula.grado_seccion || '--'} (Mi Aula)</option>`;
 
                 // Ranking position
                 const pos = data.posicion_ranking || '--';
@@ -139,18 +139,18 @@
             if (ratio > 0.6) {
                 // Bottom 40% = RED
                 card.classList.add('warning-red');
-                title.textContent = 'RED';
-                text.textContent = `Action Required: Your classroom is in ${position}th place (${aula.puntos_totales || 0} points). Motivate your students during tutor hour!`;
+                title.textContent = 'ALERTA ROJA';
+                text.textContent = `Accion requerida: Tu aula esta en la posicion ${position} (${aula.puntos_totales || 0} puntos). Motiva a tus alumnos en la hora de tutoria!`;
             } else if (ratio > 0.3) {
                 // Middle = YELLOW
                 card.classList.add('warning-yellow');
-                title.textContent = 'YELLOW';
-                text.textContent = `Your classroom is in ${position}th place. Keep encouraging students to recycle more!`;
+                title.textContent = 'PRECAUCION';
+                text.textContent = `Tu aula esta en la posicion ${position}. Sigue animando a los alumnos a reciclar mas!`;
             } else {
                 // Top 30% = GREEN
                 card.classList.add('warning-green');
-                title.textContent = 'GREEN';
-                text.textContent = `Excellent! Your classroom is in ${position}${position === 1 ? 'st' : position === 2 ? 'nd' : 'rd'} place. Keep up the great work!`;
+                title.textContent = 'EXCELENTE';
+                text.textContent = `Excelente! Tu aula esta en la posicion ${position}. Sigan con el gran trabajo!`;
             }
         }
 
@@ -181,7 +181,7 @@
         }
 
         function exportData() {
-            alert('Funcion de exportacion PDF sera implementada proximamente.');
+            alert('La funcion de exportacion PDF sera implementada proximamente.');
         }
 
         loadDashboard();

@@ -18,7 +18,8 @@
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
             <span id="header-user" style="font-size: 0.9rem;">--</span>
-            <span class="badge badge-eco" id="header-points">TOTAL ECO-POINTS: -- pts</span>
+            <span class="badge badge-eco" id="header-points">ECO-PUNTOS: -- pts</span>
+            <button onclick="cerrarSesion()" style="padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 600; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3); border-radius: 6px; color: #fff; cursor: pointer; transition: all 0.2s;">Cerrar Sesion</button>
         </div>
     </header>
 
@@ -30,17 +31,17 @@
             <div class="metrics-row">
                 <div class="metric-card glass-card-static">
                     <span class="metric-icon">&#127793;</span>
-                    <div class="metric-label">&#9679; Total Points</div>
+                    <div class="metric-label">&#9679; Puntos Totales</div>
                     <div class="metric-value" id="m-points">--<span class="metric-suffix">pts</span></div>
                 </div>
                 <div class="metric-card glass-card-static">
                     <span class="metric-icon">&#9851;</span>
-                    <div class="metric-label">&#9679; Recycled Items</div>
+                    <div class="metric-label">&#9679; Residuos Reciclados</div>
                     <div class="metric-value" id="m-items">--</div>
                 </div>
                 <div class="metric-card glass-card-static">
                     <span class="metric-icon">&#127942;</span>
-                    <div class="metric-label">&#9679; Achievements</div>
+                    <div class="metric-label">&#9679; Logros</div>
                     <div class="metric-value gold" id="m-logros">--</div>
                 </div>
             </div>
@@ -49,14 +50,14 @@
             <div class="main-grid">
                 <!-- Classroom Leaderboard -->
                 <div class="section-card glass-card-static">
-                    <div class="section-header">CLASSROOM LEADERBOARD</div>
+                    <div class="section-header">RANKING DE AULAS</div>
                     <table class="ranking-table">
                         <thead>
                             <tr>
-                                <th>Rank</th>
-                                <th>Classroom</th>
-                                <th>Points</th>
-                                <th>Trend</th>
+                                <th>Pos</th>
+                                <th>Aula</th>
+                                <th>Puntos</th>
+                                <th>Tendencia</th>
                             </tr>
                         </thead>
                         <tbody id="ranking-body">
@@ -67,7 +68,7 @@
 
                 <!-- Achievements -->
                 <div class="section-card glass-card-static">
-                    <div class="section-header">YOUR ACHIEVEMENTS</div>
+                    <div class="section-header">TUS LOGROS</div>
                     <div class="achievements-mini-grid" id="achievements-grid">
                         <div style="grid-column: 1/-1; text-align:center; color: var(--eco-text-muted); padding: 2rem;">Cargando...</div>
                     </div>
@@ -121,7 +122,7 @@
                 // Metrics
                 document.getElementById('m-points').innerHTML = `${dash.puntos_totales || 0}<span class="metric-suffix">pts</span>`;
                 document.getElementById('m-items').textContent = dash.total_registros || 0;
-                document.getElementById('header-points').textContent = `TOTAL ECO-POINTS: ${dash.puntos_totales || 0} pts`;
+                document.getElementById('header-points').textContent = `ECO-PUNTOS: ${dash.puntos_totales || 0} pts`;
 
                 const disponibles = logros.logros_disponibles || [];
                 const desbloqueados = disponibles.filter(l => l.desbloqueado);
@@ -180,6 +181,12 @@
             } catch (err) {
                 console.error('Ranking error:', err);
             }
+        }
+
+        function cerrarSesion() {
+            sessionStorage.clear();
+            localStorage.removeItem('eco_user');
+            window.location.href = '../index.html';
         }
 
         loadDashboard();

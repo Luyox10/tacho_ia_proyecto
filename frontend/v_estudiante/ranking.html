@@ -16,6 +16,7 @@
                 <a href="medallas.html">Medallas</a>
                 <a href="ranking.html" class="active">Ranking</a>
                 <a href="cultura_ambiental.html">Tips</a>
+                <a href="#" onclick="cerrarSesion(); return false;" style="color:#ef5350;">Cerrar Sesion</a>
             </div>
         </div>
 
@@ -118,6 +119,12 @@
             } catch (err) {
                 console.error('Ranking load error:', err);
             }
+        }
+
+        function cerrarSesion() {
+            sessionStorage.clear();
+            localStorage.removeItem('eco_user');
+            window.location.href = '../index.html';
         }
 
         loadRanking();

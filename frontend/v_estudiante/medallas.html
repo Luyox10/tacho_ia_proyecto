@@ -19,6 +19,7 @@
         <div style="display: flex; align-items: center; gap: 1rem;">
             <span class="badge badge-eco" id="header-points">-- pts</span>
             <span style="font-size: 0.9rem;" id="header-name">--</span>
+            <button onclick="cerrarSesion()" style="padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 600; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3); border-radius: 6px; color: #fff; cursor: pointer; transition: all 0.2s;">Cerrar Sesion</button>
         </div>
     </header>
 
@@ -51,7 +52,7 @@
             </div>
 
             <!-- Unlocked Achievements -->
-            <div class="section-title">YOUR ACHIEVEMENTS</div>
+            <div class="section-title">TUS LOGROS</div>
             <div class="medals-grid" id="unlocked-grid">
                 <div class="loading-state">Cargando logros...</div>
             </div>
@@ -178,6 +179,12 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        function cerrarSesion() {
+            sessionStorage.clear();
+            localStorage.removeItem('eco_user');
+            window.location.href = '../index.html';
         }
 
         // Init

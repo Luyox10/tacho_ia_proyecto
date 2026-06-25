@@ -15,10 +15,10 @@
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
                 <span>ECO-SCHOOL</span>
             </div>
-            <a href="dashboard.html" class="sidebar-link"><span class="sidebar-icon">&#9632;</span> Global Dashboard</a>
-            <a href="gestion_alumnos.html" class="sidebar-link"><span class="sidebar-icon">&#128101;</span> Manage Students</a>
-            <a href="gestion_tutores.html" class="sidebar-link active"><span class="sidebar-icon">&#128188;</span> Assign Tutors</a>
-            <a href="auditoria_docente.html" class="sidebar-link"><span class="sidebar-icon">&#128203;</span> Teacher Audit Log</a>
+            <a href="dashboard.html" class="sidebar-link"><span class="sidebar-icon">&#9632;</span> Panel Global</a>
+            <a href="gestion_alumnos.html" class="sidebar-link"><span class="sidebar-icon">&#128101;</span> Gestionar Alumnos</a>
+            <a href="gestion_tutores.html" class="sidebar-link active"><span class="sidebar-icon">&#128188;</span> Asignar Tutores</a>
+            <a href="auditoria_docente.html" class="sidebar-link"><span class="sidebar-icon">&#128203;</span> Auditoria Docente</a>
             <div style="margin-top: auto; padding-top: 2rem;">
                 <a href="#" onclick="cerrarSesion(); return false;" class="sidebar-link" style="color: #ef9a9a;"><span class="sidebar-icon">&#9211;</span> Cerrar Sesión</a>
             </div>
@@ -26,8 +26,8 @@
 
         <main class="admin-main">
             <div class="page-header">
-                <h2>Assign Tutors</h2>
-                <button class="btn btn-primary" onclick="openModal()">+ Assign New Tutor</button>
+                <h2>Asignar Tutores</h2>
+                <button class="btn btn-primary" onclick="openModal()">+ Registrar Nuevo Docente</button>
             </div>
 
             <!-- Tutors Table -->
@@ -52,7 +52,7 @@
             </div>
 
             <!-- Unassigned Classrooms -->
-            <h3 style="margin: 2rem 0 1rem; font-size: 1.1rem;">Classrooms Overview</h3>
+            <h3 style="margin: 2rem 0 1rem; font-size: 1.1rem;">Vista General de Aulas</h3>
             <div class="tutors-grid" id="classrooms-grid">
                 <div style="color: var(--eco-text-muted); padding: 2rem; text-align: center;">Cargando...</div>
             </div>

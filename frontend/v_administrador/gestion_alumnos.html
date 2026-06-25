@@ -15,10 +15,10 @@
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
                 <span>ECO-SCHOOL</span>
             </div>
-            <a href="dashboard.html" class="sidebar-link"><span class="sidebar-icon">&#9632;</span> Global Dashboard</a>
-            <a href="gestion_alumnos.html" class="sidebar-link active"><span class="sidebar-icon">&#128101;</span> Manage Students</a>
-            <a href="gestion_tutores.html" class="sidebar-link"><span class="sidebar-icon">&#128188;</span> Assign Tutors</a>
-            <a href="auditoria_docente.html" class="sidebar-link"><span class="sidebar-icon">&#128203;</span> Teacher Audit Log</a>
+            <a href="dashboard.html" class="sidebar-link"><span class="sidebar-icon">&#9632;</span> Panel Global</a>
+            <a href="gestion_alumnos.html" class="sidebar-link active"><span class="sidebar-icon">&#128101;</span> Gestionar Alumnos</a>
+            <a href="gestion_tutores.html" class="sidebar-link"><span class="sidebar-icon">&#128188;</span> Asignar Tutores</a>
+            <a href="auditoria_docente.html" class="sidebar-link"><span class="sidebar-icon">&#128203;</span> Auditoria Docente</a>
             <div style="margin-top: auto; padding-top: 2rem;">
                 <a href="#" onclick="cerrarSesion(); return false;" class="sidebar-link" style="color: #ef9a9a;"><span class="sidebar-icon">&#9211;</span> Cerrar Sesión</a>
             </div>
@@ -26,25 +26,25 @@
 
         <main class="admin-main">
             <div class="page-header">
-                <h2>Manage Students</h2>
-                <button class="btn btn-primary" onclick="openModal()">+ Register New Student</button>
+                <h2>Gestionar Alumnos</h2>
+                <button class="btn btn-primary" onclick="openModal()">+ Registrar Nuevo Alumno</button>
             </div>
 
             <div class="crud-card glass-card-static">
                 <div class="table-toolbar">
-                    <input type="text" class="search-input" id="search-input" placeholder="Search by DNI or name..." oninput="filterTable()">
-                    <span style="font-size: 0.8rem; color: var(--eco-text-muted);" id="total-label">0 students</span>
+                    <input type="text" class="search-input" id="search-input" placeholder="Buscar por DNI o nombre..." oninput="filterTable()">
+                    <span style="font-size: 0.8rem; color: var(--eco-text-muted);" id="total-label">0 alumnos</span>
                 </div>
                 <div class="table-wrapper">
                     <table class="crud-table">
                         <thead>
                             <tr>
                                 <th>DNI</th>
-                                <th>Name</th>
-                                <th>Last Name</th>
-                                <th>Grade/Section</th>
-                                <th>Points</th>
-                                <th>Actions</th>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Grado/Seccion</th>
+                                <th>Puntos</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="students-body">
@@ -60,7 +60,7 @@
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal">
             <button class="modal-close" onclick="closeModal()">&times;</button>
-            <div class="modal-title" id="modal-title">REGISTER NEW STUDENT</div>
+            <div class="modal-title" id="modal-title">REGISTRAR NUEVO ALUMNO</div>
             <form id="student-form">
                 <input type="hidden" id="edit-id" value="">
                 <div class="form-group">
@@ -68,29 +68,29 @@
                     <input type="text" id="f-dni" class="form-input" placeholder="DNI" required maxlength="10">
                 </div>
                 <div class="form-group">
-                    <label for="f-nombre">First Name</label>
-                    <input type="text" id="f-nombre" class="form-input" placeholder="First Name" required>
+                    <label for="f-nombre">Nombre</label>
+                    <input type="text" id="f-nombre" class="form-input" placeholder="Nombre" required>
                 </div>
                 <div class="form-group">
-                    <label for="f-apellido">Last Name</label>
-                    <input type="text" id="f-apellido" class="form-input" placeholder="Last Name" required>
+                    <label for="f-apellido">Apellido</label>
+                    <input type="text" id="f-apellido" class="form-input" placeholder="Apellido" required>
                 </div>
                 <div class="form-group">
-                    <label for="f-grado">Grade/Section</label>
+                    <label for="f-grado">Grado/Seccion</label>
                     <select id="f-grado" class="form-input" required onchange="_actualizarCupoHint()">
-                        <option value="">Select...</option>
+                        <option value="">Seleccionar...</option>
                     </select>
                     <small id="cupo-hint" style="font-size:0.78rem;font-weight:600;margin-top:4px;display:block;"></small>
                 </div>
                 <div class="form-group">
-                    <label for="f-contrasena">Password <span id="pwd-hint" style="font-size:0.75rem;color:var(--eco-text-muted);font-weight:400;">(required for new student)</span></label>
-                    <input type="password" id="f-contrasena" class="form-input" placeholder="Set password" autocomplete="new-password">
-                    <small style="color:var(--eco-text-muted);font-size:0.75rem;">Leave blank when editing to keep existing password.</small>
+                    <label for="f-contrasena">Contrasena <span id="pwd-hint" style="font-size:0.75rem;color:var(--eco-text-muted);font-weight:400;">(obligatoria para nuevo alumno)</span></label>
+                    <input type="password" id="f-contrasena" class="form-input" placeholder="Establecer contrasena" autocomplete="new-password">
+                    <small style="color:var(--eco-text-muted);font-size:0.75rem;">Dejar en blanco al editar para conservar la actual.</small>
                 </div>
                 <div id="form-error" style="display:none;padding:0.5rem 0.75rem;background:#ffebee;color:#c62828;border-radius:6px;font-size:0.82rem;margin-bottom:0.5rem;"></div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Student</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Alumno</button>
                 </div>
             </form>
         </div>
@@ -139,7 +139,7 @@
 
         function _populateAulaSelect(aulaSeleccionada = null) {
             const select = document.getElementById('f-grado');
-            select.innerHTML = '<option value="">Select...</option>' +
+            select.innerHTML = '<option value="">Seleccionar...</option>' +
                 allAulas.map(a => {
                     const cupos = a.cupos_disponibles;
                     const llena = cupos === 0;
@@ -165,10 +165,10 @@
 
         function renderTable(students) {
             const body = document.getElementById('students-body');
-            document.getElementById('total-label').textContent = `${students.length} students`;
+            document.getElementById('total-label').textContent = `${students.length} alumnos`;
 
             if (students.length === 0) {
-                body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">No students found</td></tr>';
+                body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">No se encontraron alumnos</td></tr>';
                 return;
             }
 
@@ -181,8 +181,8 @@
                     <td><strong>${s.puntos || 0}</strong> pts</td>
                     <td>
                         <div class="table-actions">
-                            <button class="action-btn edit" onclick="editStudent(${s.id})">Edit</button>
-                            <button class="action-btn delete" onclick="deleteStudent(${s.id})">Delete</button>
+                            <button class="action-btn edit" onclick="editStudent(${s.id})">Editar</button>
+                            <button class="action-btn delete" onclick="deleteStudent(${s.id})">Eliminar</button>
                         </div>
                     </td>
                 </tr>
@@ -205,7 +205,7 @@
             const pwdInput = document.getElementById('f-contrasena');
             const pwdHint  = document.getElementById('pwd-hint');
             if (student) {
-                document.getElementById('modal-title').textContent = 'EDIT STUDENT';
+                document.getElementById('modal-title').textContent = 'EDITAR ALUMNO';
                 document.getElementById('edit-id').value = student.id;
                 document.getElementById('f-dni').value = student.dni || '';
                 document.getElementById('f-dni').readOnly = true;
@@ -214,15 +214,15 @@
                 _populateAulaSelect(student.aula_id);
                 pwdInput.required = false;
                 pwdInput.value = '';
-                pwdHint.textContent = '(leave blank to keep current password)';
+                pwdHint.textContent = '(dejar en blanco para conservar la actual)';
             } else {
-                document.getElementById('modal-title').textContent = 'REGISTER NEW STUDENT';
+                document.getElementById('modal-title').textContent = 'REGISTRAR NUEVO ALUMNO';
                 document.getElementById('student-form').reset();
                 document.getElementById('edit-id').value = '';
                 document.getElementById('f-dni').readOnly = false;
                 _populateAulaSelect();
                 pwdInput.required = true;
-                pwdHint.textContent = '(required for new student)';
+                pwdHint.textContent = '(obligatoria para nuevo alumno)';
             }
         }
 
@@ -236,20 +236,20 @@
         }
 
         async function deleteStudent(id) {
-            if (!confirm('Are you sure you want to remove this student? This will also delete their records.')) return;
+            if (!confirm('Estas seguro de eliminar este alumno? Tambien se eliminaran sus registros.')) return;
             try {
                 const res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/alumnos/${id}`, {
                     method: 'DELETE'
                 });
                 if (!res.ok) {
                     const err = await res.json();
-                    alert('Error: ' + (err.detail || 'Could not delete student.'));
+                    alert('Error: ' + (err.detail || 'No se pudo eliminar el alumno.'));
                     return;
                 }
                 allStudents = allStudents.filter(s => s.id !== id);
                 renderTable(allStudents);
             } catch (err) {
-                alert('Network error: ' + err.message);
+                alert('Error de red: ' + err.message);
             }
         }
 
@@ -266,7 +266,7 @@
 
             // Validar contraseña obligatoria al crear
             if (!editId && !contrasena) {
-                errorBox.textContent = 'Password is required for new students.';
+                errorBox.textContent = 'La contrasena es obligatoria para nuevos alumnos.';
                 errorBox.style.display = 'block';
                 return false;
             }
@@ -296,7 +296,7 @@
 
                 if (!res.ok) {
                     const err = await res.json();
-                    errorBox.textContent = 'Error: ' + (err.detail || 'Could not save student.');
+                    errorBox.textContent = 'Error: ' + (err.detail || 'No se pudo guardar el alumno.');
                     errorBox.style.display = 'block';
                     return false;
                 }
@@ -314,7 +314,7 @@
                     setTimeout(() => alert(msg), 100);
                 }
             } catch (err) {
-                errorBox.textContent = 'Network error: ' + err.message;
+                errorBox.textContent = 'Error de red: ' + err.message;
                 errorBox.style.display = 'block';
             }
         }

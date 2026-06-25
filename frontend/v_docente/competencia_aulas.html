@@ -15,6 +15,7 @@
                 <a href="dashboard.html">Dashboard</a>
                 <a href="competencia_aulas.html" class="active">Competencia</a>
                 <a href="reporte_aula.html">Reporte</a>
+                <a href="#" onclick="cerrarSesion(); return false;" style="color:#ef5350;">Cerrar Sesion</a>
             </div>
         </div>
 
@@ -100,6 +101,12 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        function cerrarSesion() {
+            sessionStorage.clear();
+            localStorage.removeItem('eco_user');
+            window.location.href = '../index.html';
         }
 
         loadCompetencia();
