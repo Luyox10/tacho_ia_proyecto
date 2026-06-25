@@ -3,77 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eco-School High - Tacho IA</title>
+    <title>Tacho IA - Iniciar Sesion</title>
     <link rel="stylesheet" href="assets/css/global.css">
     <link rel="stylesheet" href="assets/css/login.css">
 </head>
 <body>
     <div class="login-page">
-        <div class="login-card glass-card-static">
-            <!-- Logo -->
-            <div class="login-logo">
-                <div class="login-logo-icon">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/>
-                    </svg>
+        <!-- Left: Background / Branding -->
+        <div class="login-left">
+            <div class="login-brand">
+                <h1>TACHO IA</h1>
+                <p>Inteligencia que<br>transforma</p>
+            </div>
+        </div>
+
+        <!-- Right: Form Card -->
+        <div class="login-right">
+            <div class="login-card">
+                <h2 class="login-title">Iniciar sesion</h2>
+                <p class="login-subtitle">Accede a tu cuenta</p>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="tab-student">Estudiante / Docente</button>
+                    <button class="tab-btn" data-tab="tab-admin">Director</button>
                 </div>
-                <div class="login-logo-text">
-                    ECO-SCHOOL<br><span>HIGH</span>
+
+                <!-- Alert container -->
+                <div id="login-alert" class="alert" role="alert">
+                    <span id="alert-icon"></span>
+                    <span id="alert-message"></span>
                 </div>
-            </div>
 
-            <p class="login-subtitle">Plataforma de Reciclaje Escolar con IA</p>
+                <!-- Student/Teacher Login -->
+                <div class="tab-content active" id="tab-student">
+                    <form id="form-student" onsubmit="return handleLogin(event, 'student')">
+                        <div class="form-group">
+                            <div class="input-icon-wrapper">
+                                <span class="input-icon">&#128100;</span>
+                                <div class="input-content">
+                                    <label for="student-dni">Usuario</label>
+                                    <input type="text" id="student-dni" class="form-input" placeholder="Ingresa tu usuario" required maxlength="10" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-icon-wrapper">
+                                <span class="input-icon">&#128274;</span>
+                                <div class="input-content">
+                                    <label for="student-password">Contrasena</label>
+                                    <input type="password" id="student-password" class="form-input" placeholder="Ingresa tu contrasena" required>
+                                </div>
+                                <button type="button" class="toggle-password" onclick="togglePwd('student-password', this)">&#128065;</button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Iniciar sesion</button>
+                    </form>
+                </div>
 
-            <!-- Tabs -->
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="tab-student">Estudiante / Docente</button>
-                <button class="tab-btn" data-tab="tab-admin">Administrador</button>
-            </div>
+                <!-- Admin Login -->
+                <div class="tab-content" id="tab-admin">
+                    <form id="form-admin" onsubmit="return handleLogin(event, 'admin')">
+                        <div class="form-group">
+                            <div class="input-icon-wrapper">
+                                <span class="input-icon">&#128100;</span>
+                                <div class="input-content">
+                                    <label for="admin-user">Usuario</label>
+                                    <input type="text" id="admin-user" class="form-input" placeholder="Ingresa tu usuario" required autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-icon-wrapper">
+                                <span class="input-icon">&#128274;</span>
+                                <div class="input-content">
+                                    <label for="admin-password">Contrasena</label>
+                                    <input type="password" id="admin-password" class="form-input" placeholder="Ingresa tu contrasena" required>
+                                </div>
+                                <button type="button" class="toggle-password" onclick="togglePwd('admin-password', this)">&#128065;</button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Iniciar sesion</button>
+                    </form>
+                </div>
 
-            <!-- Alert container -->
-            <div id="login-alert" class="alert" role="alert">
-                <span id="alert-icon"></span>
-                <span id="alert-message"></span>
-            </div>
-
-            <!-- Student/Teacher Login -->
-            <div class="tab-content active" id="tab-student">
-                <form id="form-student" onsubmit="return handleLogin(event, 'student')">
-                    <div class="form-group">
-                        <label for="student-dni">DNI</label>
-                        <input type="text" id="student-dni" class="form-input" placeholder="Ingrese su DNI" required maxlength="10" autocomplete="off">
-                    </div>
-                    <div class="form-group">
-                        <label for="student-password">Contrase&ntilde;a</label>
-                        <input type="password" id="student-password" class="form-input" placeholder="Ingrese su contrasena" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Ingresar</button>
-                </form>
-            </div>
-
-            <!-- Admin Login -->
-            <div class="tab-content" id="tab-admin">
-                <form id="form-admin" onsubmit="return handleLogin(event, 'admin')">
-                    <div class="form-group">
-                        <label for="admin-user">Correo del Director</label>
-                        <input type="text" id="admin-user" class="form-input" placeholder="correo@eco-school.edu" required autocomplete="off">
-                    </div>
-                    <div class="form-group">
-                        <label for="admin-password">Contrase&ntilde;a</label>
-                        <input type="password" id="admin-password" class="form-input" placeholder="Contrasena del director" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Acceder como Director</button>
-                </form>
-            </div>
-
-            <!-- Separator & Quick Access -->
-            <div class="separator">o acceso rapido</div>
-            <div class="quick-access">
-                <a href="v_tacho_simulador/tacho_simulador.html">Ir al Tacho Simulador</a>
-            </div>
-
-            <div class="login-footer">
-                <p>Eco-School High &copy; 2025 &mdash; Reciclaje Inteligente</p>
+                <!-- Footer -->
+                <div class="login-footer">
+                    <p>No tienes cuenta?</p>
+                    <a href="#">Contacta al administrador</a>
+                </div>
             </div>
         </div>
     </div>
@@ -156,6 +174,18 @@
             }
 
             return false;
+        }
+
+        // Toggle password visibility
+        function togglePwd(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '\u{1F441}\uFE0F';
+            } else {
+                input.type = 'password';
+                btn.textContent = '\u{1F441}';
+            }
         }
     </script>
 </body>
