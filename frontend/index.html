@@ -9,24 +9,47 @@
 </head>
 <body>
     <div class="login-page">
-        <!-- Left: Background / Branding -->
+        <!-- Left: Illustrative Panel -->
         <div class="login-left">
+            <!-- Animated particles -->
+            <div class="particles">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <!-- Recycle SVG Icon -->
+            <div class="login-illustration">
+                <svg class="recycle-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15 L35 40 L25 35 L40 60 L55 35 L45 40 Z" fill="rgba(76,175,80,0.9)"/>
+                    <path d="M70 55 L80 40 L85 50 L60 50 L70 70 L65 60 Z" fill="rgba(76,175,80,0.7)"/>
+                    <path d="M30 55 L20 70 L25 60 L40 75 L30 75 L45 55 Z" fill="rgba(76,175,80,0.8)"/>
+                    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="30s" repeatCount="indefinite"/>
+                </svg>
+            </div>
             <div class="login-brand">
                 <h1>TACHO IA</h1>
-                <p>Inteligencia que<br>transforma</p>
+                <p>Inteligencia que transforma</p>
+                <span class="brand-tagline">Sistema inteligente de clasificacion de residuos</span>
             </div>
         </div>
 
         <!-- Right: Form Card -->
         <div class="login-right">
             <div class="login-card">
-                <h2 class="login-title">Iniciar sesion</h2>
-                <p class="login-subtitle">Accede a tu cuenta</p>
+                <div class="card-header">
+                    <h2 class="login-title">Iniciar sesion</h2>
+                    <p class="login-subtitle">Accede a tu cuenta</p>
+                </div>
 
                 <!-- Tabs -->
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="tab-student">Estudiante / Docente</button>
-                    <button class="tab-btn" data-tab="tab-admin">Director</button>
+                <div class="login-tabs">
+                    <button class="tab-btn active" data-tab="tab-student">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Estudiante / Docente
+                    </button>
+                    <button class="tab-btn" data-tab="tab-admin">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Director
+                    </button>
                 </div>
 
                 <!-- Alert container -->
@@ -40,7 +63,9 @@
                     <form id="form-student" onsubmit="return handleLogin(event, 'student')">
                         <div class="form-group">
                             <div class="input-icon-wrapper">
-                                <span class="input-icon">&#128100;</span>
+                                <span class="input-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </span>
                                 <div class="input-content">
                                     <label for="student-dni">Usuario</label>
                                     <input type="text" id="student-dni" class="form-input" placeholder="Ingresa tu usuario" required maxlength="10" autocomplete="off">
@@ -49,15 +74,22 @@
                         </div>
                         <div class="form-group">
                             <div class="input-icon-wrapper">
-                                <span class="input-icon">&#128274;</span>
+                                <span class="input-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                </span>
                                 <div class="input-content">
                                     <label for="student-password">Contrasena</label>
                                     <input type="password" id="student-password" class="form-input" placeholder="Ingresa tu contrasena" required>
                                 </div>
-                                <button type="button" class="toggle-password" onclick="togglePwd('student-password', this)">&#128065;</button>
+                                <button type="button" class="toggle-password" onclick="togglePwd('student-password', this)" aria-label="Mostrar contrasena">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-block">Iniciar sesion</button>
+                        <button type="submit" class="btn btn-primary btn-block btn-login">
+                            <span>Iniciar sesion</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
                     </form>
                 </div>
 
@@ -66,7 +98,9 @@
                     <form id="form-admin" onsubmit="return handleLogin(event, 'admin')">
                         <div class="form-group">
                             <div class="input-icon-wrapper">
-                                <span class="input-icon">&#128100;</span>
+                                <span class="input-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </span>
                                 <div class="input-content">
                                     <label for="admin-user">Usuario</label>
                                     <input type="text" id="admin-user" class="form-input" placeholder="Ingresa tu usuario" required autocomplete="off">
@@ -75,15 +109,22 @@
                         </div>
                         <div class="form-group">
                             <div class="input-icon-wrapper">
-                                <span class="input-icon">&#128274;</span>
+                                <span class="input-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                </span>
                                 <div class="input-content">
                                     <label for="admin-password">Contrasena</label>
                                     <input type="password" id="admin-password" class="form-input" placeholder="Ingresa tu contrasena" required>
                                 </div>
-                                <button type="button" class="toggle-password" onclick="togglePwd('admin-password', this)">&#128065;</button>
+                                <button type="button" class="toggle-password" onclick="togglePwd('admin-password', this)" aria-label="Mostrar contrasena">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-block">Iniciar sesion</button>
+                        <button type="submit" class="btn btn-primary btn-block btn-login">
+                            <span>Iniciar sesion</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
                     </form>
                 </div>
 
