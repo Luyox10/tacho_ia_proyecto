@@ -142,9 +142,11 @@ async function sendForClassification() {
         return;
     }
 
-    // Show loading
+    // Stop webcam and show loading
+    stopWebcam();
     spinner.classList.add('visible');
     btnSend.style.display = 'none';
+    btnRetake.style.display = 'none';
 
     const formData = new FormData();
     formData.append('imagen_base64', base64String);
@@ -163,11 +165,15 @@ async function sendForClassification() {
             showResult(data);
         } else {
             showSimAlert('error', data.detail || 'Error al clasificar el residuo');
-            btnSend.style.display = 'inline-flex';
+            // Restart webcam so user can retry
+            startWebcam();
+            btnSend.style.display = 'none';
         }
     } catch (err) {
         spinner.classList.remove('visible');
-        btnSend.style.display = 'inline-flex';
+        // Restart webcam so user can retry
+        startWebcam();
+        btnSend.style.display = 'none';
         showSimAlert('error', 'Error de conexion al clasificar. Verifique que el servidor este activo.');
         console.error('Classification error:', err);
     }
@@ -216,7 +222,7 @@ async function showResult(data) {
         <span style="display:flex; flex-direction:column; align-items:center; gap:0.25rem;">
             <strong>Residuo "${categoryMap[category] || category}" detectado correctamente</strong>
             <span>Imagen procesada exitosamente para ${verifiedStudent.nombre}</span>
-            <span style="font-weight:700; font-size:1.1rem; margin-top:0.25rem;">Score total: ${totalScore} pts</span>
+            <span style="font-weight:700; font-size:1.1rem; margin-top:0.25rem;">Puntaje total: ${totalScore} pts</span>
         </span>
     `;
 
