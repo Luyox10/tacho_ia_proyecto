@@ -488,15 +488,15 @@ async def clasificar_residuo(
 # ── 3b. LÓGICA DE LOGROS ─────────────────────
 
 LOGROS_CONFIG = [
-    {"nombre": "Eco-Guardian", "condicion": "total", "umbral": 50, "descripcion": "Reciclar 50 residuos en total"},
-    {"nombre": "Plastic King", "condicion": "plastic", "umbral": 10, "descripcion": "Reciclar 10 items de plastico"},
-    {"nombre": "Paper Saver", "condicion": "paper", "umbral": 10, "descripcion": "Reciclar 10 items de papel"},
-    {"nombre": "Glass Collector", "condicion": "glass", "umbral": 10, "descripcion": "Reciclar 10 items de vidrio"},
-    {"nombre": "Metal Master", "condicion": "metal", "umbral": 10, "descripcion": "Reciclar 10 items de metal"},
-    {"nombre": "Organic Hero", "condicion": "organic", "umbral": 10, "descripcion": "Reciclar 10 items organicos"},
-    {"nombre": "First Step", "condicion": "total", "umbral": 1, "descripcion": "Reciclar tu primer residuo"},
-    {"nombre": "Recycler Pro", "condicion": "total", "umbral": 25, "descripcion": "Reciclar 25 residuos en total"},
-    {"nombre": "Century Club", "condicion": "total", "umbral": 100, "descripcion": "Reciclar 100 residuos en total"},
+    {"nombre": "Guardian Ecologico", "condicion": "total", "umbral": 50, "descripcion": "Reciclar 50 residuos en total"},
+    {"nombre": "Rey del Plastico", "condicion": "plastic", "umbral": 10, "descripcion": "Reciclar 10 items de plastico"},
+    {"nombre": "Salvador del Papel", "condicion": "paper", "umbral": 10, "descripcion": "Reciclar 10 items de papel"},
+    {"nombre": "Colector de Vidrio", "condicion": "glass", "umbral": 10, "descripcion": "Reciclar 10 items de vidrio"},
+    {"nombre": "Maestro del Metal", "condicion": "metal", "umbral": 10, "descripcion": "Reciclar 10 items de metal"},
+    {"nombre": "Heroe Organico", "condicion": "organic", "umbral": 10, "descripcion": "Reciclar 10 items organicos"},
+    {"nombre": "Primer Paso", "condicion": "total", "umbral": 1, "descripcion": "Reciclar tu primer residuo"},
+    {"nombre": "Reciclador Pro", "condicion": "total", "umbral": 25, "descripcion": "Reciclar 25 residuos en total"},
+    {"nombre": "Club de los 100", "condicion": "total", "umbral": 100, "descripcion": "Reciclar 100 residuos en total"},
 ]
 
 
