@@ -184,8 +184,9 @@ async function sendForClassification() {
 async function showResult(data) {
     stopWebcam();
 
-    // Hide webcam step
-    document.getElementById('step-webcam').classList.remove('visible');
+    // Keep webcam section visible but show result panel
+    const waitingCard = document.getElementById('result-waiting');
+    if (waitingCard) waitingCard.style.display = 'none';
 
     // Show result
     const resultSection = document.getElementById('step-result');
@@ -206,13 +207,17 @@ async function showResult(data) {
     const puntosGanados = data.puntos_sumados || 10;
 
     document.getElementById('result-category').textContent = categoryMap[category] || category;
-    document.getElementById('result-confidence').textContent = `Confianza: ${(confidence * 100).toFixed(1)}% | +${puntosGanados} pts ganados`;
+    const confPercent = (confidence * 100).toFixed(1);
+    document.getElementById('result-confidence').textContent = `Confianza: ${confPercent}% | +${puntosGanados} pts ganados`;
 
     // Animate confidence bar
     const barFill = document.getElementById('confidence-bar-fill');
     if (barFill) {
-        setTimeout(() => { barFill.style.width = `${(confidence * 100).toFixed(1)}%`; }, 100);
+        setTimeout(() => { barFill.style.width = `${confPercent}%`; }, 100);
     }
+
+    // Update quick stats
+    updateQuickStats(categoryMap[category] || category, confPercent, puntosGanados);
 
     // Fetch updated total score
     let totalScore = puntosGanados;
@@ -223,6 +228,8 @@ async function showResult(data) {
             totalScore = scoreData.puntos_totales || puntosGanados;
         }
     } catch (e) { /* silent fallback */ }
+
+    updateTotalScore(totalScore);
 
     const resultAlert = document.getElementById('result-alert');
     resultAlert.className = 'alert alert-success show';
@@ -261,6 +268,14 @@ function resetSimulator() {
 
     hideSimAlert();
     updateProgress(1);
+
+    // Reset result panel to waiting state
+    const waitingCard = document.getElementById('result-waiting');
+    if (waitingCard) waitingCard.style.display = '';
+
+    // Hide quick stats
+    const statsSection = document.getElementById('quick-stats');
+    if (statsSection) statsSection.classList.remove('visible');
 }
 
 // ===== PROGRESS INDICATOR =====
@@ -284,6 +299,32 @@ function updateProgress(step) {
         const barFill = document.getElementById('confidence-bar-fill');
         if (barFill) barFill.style.width = '0%';
     }
+}
+
+// ===== QUICK STATS =====
+let sessionClassifications = 0;
+let sessionTotalConfidence = 0;
+
+function updateQuickStats(residuoName, confPercent, puntos) {
+    sessionClassifications++;
+    sessionTotalConfidence += parseFloat(confPercent);
+
+    const elClasif = document.getElementById('stat-clasificaciones');
+    const elUltimo = document.getElementById('stat-ultimo');
+    const elPrecision = document.getElementById('stat-precision');
+
+    if (elClasif) elClasif.textContent = sessionClassifications;
+    if (elUltimo) elUltimo.textContent = residuoName;
+    if (elPrecision) elPrecision.textContent = `${(sessionTotalConfidence / sessionClassifications).toFixed(1)}%`;
+
+    // Show stats section
+    const statsSection = document.getElementById('quick-stats');
+    if (statsSection) statsSection.classList.add('visible');
+}
+
+function updateTotalScore(totalScore) {
+    const elPuntos = document.getElementById('stat-puntos');
+    if (elPuntos) elPuntos.textContent = totalScore;
 }
 
 // ===== EVENT LISTENERS =====
