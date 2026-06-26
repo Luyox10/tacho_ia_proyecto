@@ -122,13 +122,27 @@ def cargar_modelo():
     global _modelo
     if _modelo is None:
         ruta = os.path.join(os.path.dirname(__file__), NOMBRE_MODELO)
+        print(f"[Modelo] === INICIO CARGA DEL MODELO ===")
+        print(f"[Modelo] Ruta esperada del .h5: {ruta}")
+        print(f"[Modelo] Directorio base (__file__): {os.path.dirname(__file__)}")
+        print(f"[Modelo] Archivo existe en disco: {os.path.isfile(ruta)}")
         if os.path.isfile(ruta):
             size_mb = os.path.getsize(ruta) / 1_048_576
-            print(f"[Modelo] Archivo '{NOMBRE_MODELO}' encontrado ({size_mb:.2f} MB). Omitiendo descarga.")
+            print(f"[Modelo] Archivo '{NOMBRE_MODELO}' YA encontrado ({size_mb:.2f} MB). Omitiendo descarga.")
         else:
+            print(f"[Modelo] Archivo NO encontrado. Iniciando descarga desde Hugging Face...")
+            print(f"[Modelo] URL de descarga: {HF_MODEL_URL}")
             _descargar_modelo(ruta)
+            if os.path.isfile(ruta):
+                size_mb = os.path.getsize(ruta) / 1_048_576
+                print(f"[Modelo] Descarga EXITOSA. Archivo guardado en: {ruta} ({size_mb:.2f} MB)")
+            else:
+                print(f"[Modelo] ERROR: El archivo NO se creó después de la descarga.")
+        print(f"[Modelo] Cargando modelo con TensorFlow/Keras...")
         import tensorflow as tf
         _modelo = tf.keras.models.load_model(ruta)
+        print(f"[Modelo] Modelo cargado EXITOSAMENTE en memoria.")
+        print(f"[Modelo] === FIN CARGA DEL MODELO ===")
     return _modelo
 
 
