@@ -144,7 +144,7 @@ def preprocesar_imagen(imagen_bytes: bytes) -> np.ndarray:
         imagen_bytes: contenido binario de la imagen (JPEG/PNG).
 
     Returns:
-        np.ndarray de shape (1, 224, 224, 3) con valores en [0, 1].
+        np.ndarray de shape (1, 224, 224, 3) con valores en [0, 255].
 
     Raises:
         HTTPException 400: si la imagen no se puede procesar.
@@ -152,7 +152,7 @@ def preprocesar_imagen(imagen_bytes: bytes) -> np.ndarray:
     try:
         img = Image.open(io.BytesIO(imagen_bytes)).convert("RGB")
         img = img.resize(IMG_SIZE)
-        arr = np.array(img, dtype=np.float32) / 255.0
+        arr = np.array(img, dtype=np.float32)
         return np.expand_dims(arr, axis=0)
     except Exception as e:
         raise HTTPException(

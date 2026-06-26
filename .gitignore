@@ -1,0 +1,16 @@
+# Model files (downloaded at runtime)
+*.h5
+backend/modelo_residuos.h5
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Node
+node_modules/
+
+# IDE
+.vscode/
+.idea/
