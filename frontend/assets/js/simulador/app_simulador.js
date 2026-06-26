@@ -56,6 +56,7 @@ async function verificarDNI(e) {
             setTimeout(() => {
                 document.getElementById('step-webcam').classList.add('visible');
                 startWebcam();
+                updateProgress(2);
             }, 600);
         } else {
             showSimAlert('error', data.detail || 'DNI no encontrado en el sistema');
@@ -189,6 +190,7 @@ async function showResult(data) {
     // Show result
     const resultSection = document.getElementById('step-result');
     resultSection.classList.add('visible');
+    updateProgress(3);
 
     const categoryMap = {
         'glass': 'Vidrio',
@@ -205,6 +207,12 @@ async function showResult(data) {
 
     document.getElementById('result-category').textContent = categoryMap[category] || category;
     document.getElementById('result-confidence').textContent = `Confianza: ${(confidence * 100).toFixed(1)}% | +${puntosGanados} pts ganados`;
+
+    // Animate confidence bar
+    const barFill = document.getElementById('confidence-bar-fill');
+    if (barFill) {
+        setTimeout(() => { barFill.style.width = `${(confidence * 100).toFixed(1)}%`; }, 100);
+    }
 
     // Fetch updated total score
     let totalScore = puntosGanados;
@@ -252,6 +260,30 @@ function resetSimulator() {
     btnSend.style.display = 'none';
 
     hideSimAlert();
+    updateProgress(1);
+}
+
+// ===== PROGRESS INDICATOR =====
+function updateProgress(step) {
+    const steps = [1, 2, 3];
+    steps.forEach(s => {
+        const el = document.getElementById(`prog-step-${s}`);
+        if (!el) return;
+        el.classList.remove('active', 'completed');
+        if (s < step) el.classList.add('completed');
+        else if (s === step) el.classList.add('active');
+    });
+    // Update lines
+    const lines = document.querySelectorAll('.progress-line');
+    lines.forEach((line, i) => {
+        if (i + 1 < step) line.classList.add('active');
+        else line.classList.remove('active');
+    });
+    // Reset confidence bar on step 1
+    if (step === 1) {
+        const barFill = document.getElementById('confidence-bar-fill');
+        if (barFill) barFill.style.width = '0%';
+    }
 }
 
 // ===== EVENT LISTENERS =====
