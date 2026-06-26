@@ -54,7 +54,7 @@ app.add_middleware(
 # Carga del modelo Keras (una sola vez al iniciar)
 # ─────────────────────────────────────────────
 
-CATEGORIAS = ["glass", "organic", "metal", "others", "plastic", "paper"]
+CATEGORIAS = ["glass", "metal", "organic", "others", "paper", "plastic"]
 IMG_SIZE = (224, 224)
 MAX_ALUMNOS_POR_AULA = 25
 
